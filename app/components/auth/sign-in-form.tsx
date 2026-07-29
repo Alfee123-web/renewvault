@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 
@@ -87,12 +88,27 @@ export function SignInForm() {
         Sign in
       </Button>
 
+      <div className="flex items-center gap-3 py-1">
+        <div className="h-px flex-1 bg-[var(--border)]" />
+        <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">
+          or
+        </span>
+        <div className="h-px flex-1 bg-[var(--border)]" />
+      </div>
+
       <button
         type="button"
         className="flex w-full items-center justify-center rounded-[14px] border border-[var(--border)] bg-transparent px-4 py-3 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
       >
         Continue with Google
       </button>
+
+      <p className="pt-2 text-center text-sm text-[var(--text-body)]">
+        Don&apos;t have an account?{" "}
+        <Link href="/sign-up" className="text-[var(--accent)] hover:underline">
+          Sign up
+        </Link>
+      </p>
     </form>
   );
 }
