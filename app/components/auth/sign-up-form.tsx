@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 
@@ -11,6 +12,7 @@ export function SignUpForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
   const [errors, setErrors] = useState<{
     name?: string;
     email?: string;
@@ -72,6 +74,12 @@ export function SignUpForm() {
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  async function handleGoogleSignIn() {
+    setIsGoogleSigningIn(true);
+    await signIn("google", { callbackUrl: "/dashboard" });
+    setIsGoogleSigningIn(false);
   }
 
   return (
@@ -180,9 +188,11 @@ export function SignUpForm() {
 
       <button
         type="button"
-        className="flex w-full items-center justify-center rounded-[14px] border border-[var(--border)] bg-transparent px-4 py-3 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
+        onClick={handleGoogleSignIn}
+        disabled={isGoogleSigningIn}
+        className="flex w-full items-center justify-center rounded-[14px] border border-[var(--border)] bg-transparent px-4 py-3 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        Continue with Google
+        {isGoogleSigningIn ? "Opening Google..." : "Continue with Google"}
       </button>
 
       <p className="pt-2 text-center text-sm text-[var(--text-body)]">
