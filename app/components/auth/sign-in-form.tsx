@@ -9,25 +9,62 @@ export function SignInForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{
+    email?: string;
+    password?: string;
+    root?: string;
+  }>({});
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function validate() {
+    const nextErrors: {
+      email?: string;
+      password?: string;
+      root?: string;
+    } = {};
+
+    if (!email.trim()) {
+      nextErrors.email = "Email is required.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      nextErrors.email = "Enter a valid email address.";
+    }
+
+    if (!password.trim()) {
+      nextErrors.password = "Password is required.";
+    } else if (password.length < 8) {
+      nextErrors.password = "Password must be at least 8 characters.";
+    }
+
+    return nextErrors;
+  }
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    const nextErrors: { email?: string; password?: string } = {};
-
-    if (!email.trim()) nextErrors.email = "Email is required.";
-    if (!password.trim()) nextErrors.password = "Password is required.";
-
+    const nextErrors = validate();
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length > 0) return;
 
-    console.log({ email, password, remember });
+    setIsSubmitting(true);
+
+    try {
+      console.log({ email, password, remember });
+    } catch {
+      setErrors({ root: "Something went wrong. Please try again." });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-5">
+      {errors.root && (
+        <p className="rounded-[12px] border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {errors.root}
+        </p>
+      )}
+
       <div>
         <label htmlFor="email" className="mb-2 block text-sm text-[var(--text-secondary)]">
           Email
@@ -40,6 +77,7 @@ export function SignInForm() {
           onChange={(e) => setEmail(e.target.value)}
           aria-invalid={!!errors.email}
           aria-describedby={errors.email ? "email-error" : undefined}
+          className={errors.email ? "border-red-500/50 focus:border-red-400 focus:ring-red-500/20" : ""}
         />
         {errors.email && (
           <p id="email-error" className="mt-2 text-sm text-red-400">
@@ -60,6 +98,7 @@ export function SignInForm() {
           onChange={(e) => setPassword(e.target.value)}
           aria-invalid={!!errors.password}
           aria-describedby={errors.password ? "password-error" : undefined}
+          className={errors.password ? "border-red-500/50 focus:border-red-400 focus:ring-red-500/20" : ""}
         />
         {errors.password && (
           <p id="password-error" className="mt-2 text-sm text-red-400">
@@ -84,8 +123,8 @@ export function SignInForm() {
         </button>
       </div>
 
-      <Button type="submit" className="w-full">
-        Sign in
+      <Button type="submit" className="w-full" disabled={isSubmitting}>
+        {isSubmitting ? "Signing in..." : "Sign in"}
       </Button>
 
       <div className="flex items-center gap-3 py-1">
@@ -108,6 +147,10 @@ export function SignInForm() {
         <Link href="/sign-up" className="text-[var(--accent)] hover:underline">
           Sign up
         </Link>
+      </p>
+
+      <p className="text-center text-xs text-[var(--text-muted)]">
+        Password must be at least 8 characters.
       </p>
     </form>
   );

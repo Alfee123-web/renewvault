@@ -10,41 +10,78 @@ export function SignUpForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{
     name?: string;
     email?: string;
     password?: string;
     confirmPassword?: string;
+    root?: string;
   }>({});
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-
+  function validate() {
     const nextErrors: {
       name?: string;
       email?: string;
       password?: string;
       confirmPassword?: string;
+      root?: string;
     } = {};
 
-    if (!name.trim()) nextErrors.name = "Name is required.";
-    if (!email.trim()) nextErrors.email = "Email is required.";
-    if (!password.trim()) nextErrors.password = "Password is required.";
+    if (!name.trim()) {
+      nextErrors.name = "Name is required.";
+    } else if (name.trim().length < 2) {
+      nextErrors.name = "Name must be at least 2 characters.";
+    }
+
+    if (!email.trim()) {
+      nextErrors.email = "Email is required.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      nextErrors.email = "Enter a valid email address.";
+    }
+
+    if (!password.trim()) {
+      nextErrors.password = "Password is required.";
+    } else if (password.length < 8) {
+      nextErrors.password = "Password must be at least 8 characters.";
+    }
+
     if (!confirmPassword.trim()) {
       nextErrors.confirmPassword = "Please confirm your password.";
     } else if (password !== confirmPassword) {
       nextErrors.confirmPassword = "Passwords do not match.";
     }
 
+    return nextErrors;
+  }
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    const nextErrors = validate();
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length > 0) return;
 
-    console.log({ name, email, password, confirmPassword });
+    setIsSubmitting(true);
+
+    try {
+      console.log({ name, email, password, confirmPassword });
+    } catch {
+      setErrors({ root: "Something went wrong. Please try again." });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-5">
+      {errors.root && (
+        <p className="rounded-[12px] border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {errors.root}
+        </p>
+      )}
+
       <div>
         <label htmlFor="name" className="mb-2 block text-sm text-[var(--text-secondary)]">
           Full name
@@ -57,6 +94,7 @@ export function SignUpForm() {
           onChange={(e) => setName(e.target.value)}
           aria-invalid={!!errors.name}
           aria-describedby={errors.name ? "name-error" : undefined}
+          className={errors.name ? "border-red-500/50 focus:border-red-400 focus:ring-red-500/20" : ""}
         />
         {errors.name && (
           <p id="name-error" className="mt-2 text-sm text-red-400">
@@ -77,6 +115,7 @@ export function SignUpForm() {
           onChange={(e) => setEmail(e.target.value)}
           aria-invalid={!!errors.email}
           aria-describedby={errors.email ? "email-error" : undefined}
+          className={errors.email ? "border-red-500/50 focus:border-red-400 focus:ring-red-500/20" : ""}
         />
         {errors.email && (
           <p id="email-error" className="mt-2 text-sm text-red-400">
@@ -97,6 +136,7 @@ export function SignUpForm() {
           onChange={(e) => setPassword(e.target.value)}
           aria-invalid={!!errors.password}
           aria-describedby={errors.password ? "password-error" : undefined}
+          className={errors.password ? "border-red-500/50 focus:border-red-400 focus:ring-red-500/20" : ""}
         />
         {errors.password && (
           <p id="password-error" className="mt-2 text-sm text-red-400">
@@ -117,6 +157,7 @@ export function SignUpForm() {
           onChange={(e) => setConfirmPassword(e.target.value)}
           aria-invalid={!!errors.confirmPassword}
           aria-describedby={errors.confirmPassword ? "confirm-password-error" : undefined}
+          className={errors.confirmPassword ? "border-red-500/50 focus:border-red-400 focus:ring-red-500/20" : ""}
         />
         {errors.confirmPassword && (
           <p id="confirm-password-error" className="mt-2 text-sm text-red-400">
@@ -125,8 +166,8 @@ export function SignUpForm() {
         )}
       </div>
 
-      <Button type="submit" className="w-full">
-        Create account
+      <Button type="submit" className="w-full" disabled={isSubmitting}>
+        {isSubmitting ? "Creating account..." : "Create account"}
       </Button>
 
       <div className="flex items-center gap-3 py-1">
@@ -149,6 +190,10 @@ export function SignUpForm() {
         <Link href="/sign-in" className="text-[var(--accent)] hover:underline">
           Sign in
         </Link>
+      </p>
+
+      <p className="text-center text-xs text-[var(--text-muted)]">
+        Password must be at least 8 characters.
       </p>
     </form>
   );
