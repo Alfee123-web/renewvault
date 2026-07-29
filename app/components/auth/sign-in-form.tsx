@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 
@@ -57,6 +58,10 @@ export function SignInForm() {
     }
   }
 
+  async function handleGoogleSignIn() {
+    await signIn("google", { callbackUrl: "/dashboard" });
+  }
+
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-5">
       {errors.root && (
@@ -77,7 +82,9 @@ export function SignInForm() {
           onChange={(e) => setEmail(e.target.value)}
           aria-invalid={!!errors.email}
           aria-describedby={errors.email ? "email-error" : undefined}
-          className={errors.email ? "border-red-500/50 focus:border-red-400 focus:ring-red-500/20" : ""}
+          className={
+            errors.email ? "border-red-500/50 focus:border-red-400 focus:ring-red-500/20" : ""
+          }
         />
         {errors.email && (
           <p id="email-error" className="mt-2 text-sm text-red-400">
@@ -98,7 +105,9 @@ export function SignInForm() {
           onChange={(e) => setPassword(e.target.value)}
           aria-invalid={!!errors.password}
           aria-describedby={errors.password ? "password-error" : undefined}
-          className={errors.password ? "border-red-500/50 focus:border-red-400 focus:ring-red-500/20" : ""}
+          className={
+            errors.password ? "border-red-500/50 focus:border-red-400 focus:ring-red-500/20" : ""
+          }
         />
         {errors.password && (
           <p id="password-error" className="mt-2 text-sm text-red-400">
@@ -137,6 +146,7 @@ export function SignInForm() {
 
       <button
         type="button"
+        onClick={handleGoogleSignIn}
         className="flex w-full items-center justify-center rounded-[14px] border border-[var(--border)] bg-transparent px-4 py-3 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
       >
         Continue with Google
