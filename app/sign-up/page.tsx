@@ -1,5 +1,6 @@
 import { AuthShell } from "@/app/components/auth/auth-shell";
 import { AuthCard } from "@/app/components/auth/auth-card";
+import { SignUpForm } from "@/app/components/auth/sign-up-form";
 
 export default function SignUpPage() {
   return (
@@ -9,6 +10,10 @@ export default function SignUpPage() {
         <p className="mt-2 text-sm text-[var(--text-body)]">
           Create your RenewVault account to get started.
         </p>
+
+        <div className="mt-6">
+          <SignUpForm />
+        </div>
       </AuthCard>
     </AuthShell>
   );
