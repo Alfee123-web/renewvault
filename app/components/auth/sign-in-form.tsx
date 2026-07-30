@@ -51,7 +51,17 @@ export function SignInForm() {
     setIsSubmitting(true);
 
     try {
-      console.log({ email, password, remember });
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setErrors({ root: "Invalid email or password." });
+      } else {
+        window.location.href = "/dashboard";
+      }
     } catch {
       setErrors({ root: "Something went wrong. Please try again." });
     } finally {

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
+import { signup } from "@/app/actions/auth";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 
@@ -68,7 +69,11 @@ export function SignUpForm() {
     setIsSubmitting(true);
 
     try {
-      console.log({ name, email, password, confirmPassword });
+      const result = await signup({ name, email, password });
+
+      if (!result.success) {
+        setErrors({ root: result.message });
+      }
     } catch {
       setErrors({ root: "Something went wrong. Please try again." });
     } finally {
