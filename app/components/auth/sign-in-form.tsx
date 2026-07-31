@@ -3,10 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 
 export function SignInForm() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -54,13 +56,15 @@ export function SignInForm() {
       const result = await signIn("credentials", {
         email,
         password,
+        remember: remember ? "on" : "off",
         redirect: false,
       });
 
       if (result?.error) {
         setErrors({ root: "Invalid email or password." });
       } else {
-        window.location.href = "/dashboard";
+        router.push("/dashboard");
+        router.refresh();
       }
     } catch {
       setErrors({ root: "Something went wrong. Please try again." });
@@ -136,9 +140,9 @@ export function SignInForm() {
           Remember me
         </label>
 
-        <button type="button" className="text-[var(--accent)] hover:underline">
+        <Link href="/forgot-password" className="text-[var(--accent)] hover:underline">
           Forgot password?
-        </button>
+        </Link>
       </div>
 
       <Button type="submit" className="w-full" disabled={isSubmitting}>

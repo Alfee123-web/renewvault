@@ -8,9 +8,15 @@ type SignupInput = {
   name: string;
   email: string;
   password: string;
+  remember?: boolean;
 };
 
-export async function signup({ name, email, password }: SignupInput) {
+export async function signup({
+  name,
+  email,
+  password,
+  remember = false,
+}: SignupInput) {
   const existingUser = await prisma.user.findUnique({
     where: { email },
   });
@@ -32,6 +38,7 @@ export async function signup({ name, email, password }: SignupInput) {
   await signIn("credentials", {
     email,
     password,
+    remember: remember ? "on" : "off",
     redirectTo: "/dashboard",
   });
 
