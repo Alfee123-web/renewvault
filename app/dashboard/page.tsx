@@ -1,34 +1,31 @@
 "use client";
 
-import { useState } from "react";
-import DashboardHeader from "@/app/components/dashboard/DashboardHeader";
-import StatCard from "@/app/components/dashboard/StatCard";
-import RenewalsList from "@/app/components/dashboard/RenewalsList";
-import AddRenewalModal from "@/app/components/dashboard/AddRenewalModal";
-import { mockRenewals, mockStats } from "@/lib/mock-data";
+import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
-  const [modalOpen, setModalOpen] = useState(false);
+  const router = useRouter();
 
-  // TODO: swap mockRenewals/mockStats for real data once your teammate's
-  // API routes / auth session are ready. Keep this component's shape the
-  // same so the swap is a one-line change.
+  const handleSignOut = async () => {
+    await signOut({ callbackUrl: "/sign-in" });
+    router.refresh();
+  };
 
   return (
-    <main className="min-h-screen bg-[var(--bg)] px-6 py-10 md:px-12">
-      <div className="mx-auto flex max-w-5xl flex-col gap-8">
-        <DashboardHeader onAddClick={() => setModalOpen(true)} />
+    <main className="min-h-screen flex items-center justify-center bg-black text-white px-4">
+      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/5 p-8 text-center shadow-xl">
+        <h1 className="text-3xl font-semibold">Dashboard</h1>
+        <p className="mt-2 text-sm text-white/70">
+          Temporary page for auth testing. The real dashboard will be added later.
+        </p>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <StatCard label="Upcoming" value={mockStats.upcoming} />
-          <StatCard label="Due this week" value={mockStats.dueThisWeek} accent />
-          <StatCard label="Saved reminders" value={mockStats.savedReminders} />
-        </div>
-
-        <RenewalsList renewals ={mockRenewals} />
+        <button
+          onClick={handleSignOut}
+          className="mt-6 rounded-lg bg-orange-500 px-5 py-3 font-medium text-white transition hover:bg-orange-600"
+        >
+          Sign out
+        </button>
       </div>
-
-      <AddRenewalModal open={modalOpen} onClose={() => setModalOpen(false)} />
     </main>
   );
 }
