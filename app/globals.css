@@ -13,10 +13,30 @@
   --text-body: #a1a1aa;
   --text-muted: #71717a;
 
+  /* Primary — attention, CTAs, "upcoming" */
   --accent: #f97316;
   --accent-hover: #ea580c;
   --accent-soft: rgba(249, 115, 22, 0.12);
   --focus-ring: rgba(249, 115, 22, 0.38);
+
+  /* Secondary — trust, sync, secure, links */
+  --secondary: #4338ca;
+  --secondary-hover: #3730a3;
+  --secondary-soft: rgba(67, 56, 202, 0.12);
+  --secondary-text: #a5a6f6;
+
+  /* Atmospheric only — background mesh, never UI elements */
+  --violet-glow: #8b5cf6;
+
+  /* Success — saved, synced, healthy state */
+  --success: #22c55e;
+  --success-soft: rgba(34, 197, 94, 0.12);
+  --success-text: #4ade80;
+
+  /* Danger — overdue, urgent (reserved, don't overuse) */
+  --danger: #ef4444;
+  --danger-soft: rgba(239, 68, 68, 0.12);
+  --danger-text: #f87171;
 
   --radius-md: 14px;
   --radius-lg: 18px;
@@ -54,4 +74,125 @@ body {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* ---------------------------------- */
+/* ANIMATIONS                         */
+/* ---------------------------------- */
+
+@keyframes float-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(30px, -40px) scale(1.12); }
+}
+@keyframes float-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-25px, 35px) scale(1.08); }
+}
+@keyframes float-c {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(20px, 20px) scale(1.15); }
+}
+
+.animate-float-a { animation: float-a 14s ease-in-out infinite; }
+.animate-float-b { animation: float-b 18s ease-in-out infinite; }
+.animate-float-c { animation: float-c 22s ease-in-out infinite; }
+
+@keyframes pan-grid {
+  from { background-position: 0 0; }
+  to { background-position: 36px 36px; }
+}
+.animate-pan-grid {
+  animation: pan-grid 20s linear infinite;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in-up {
+  animation: fade-in-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+.animate-pulse-glow {
+  animation: pulse-glow 4s ease-in-out infinite;
+}
+
+@keyframes mesh-sweep {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+.animate-mesh-sweep {
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    rgba(249, 115, 22, 0.05) 20%,
+    transparent 40%,
+    rgba(67, 56, 202, 0.06) 60%,
+    transparent 80%
+  );
+  background-size: 300% 300%;
+  animation: mesh-sweep 16s ease-in-out infinite;
+}
+
+/* Meteors */
+@keyframes meteor {
+  0% { transform: rotate(215deg) translateX(0); opacity: 0; }
+  10% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: rotate(215deg) translateX(-1500px); opacity: 0; }
+}
+
+.meteor-trail {
+  position: absolute;
+  width: 150px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--secondary-text), transparent);
+  animation: meteor 8s linear infinite;
+  opacity: 0;
+}
+
+.meteor-1 { top: 20%; left: 80%; animation-delay: 0s; }
+.meteor-2 { top: 50%; left: 90%; animation-delay: 4s; }
+.meteor-3 { top: 80%; left: 70%; animation-delay: 2s; }
+
+/* Scroll Reveal Classes */
+.reveal-card {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-card.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.delay-100 { transition-delay: 0.1s; }
+.delay-200 { transition-delay: 0.2s; }
+.delay-300 { transition-delay: 0.3s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-a,
+  .animate-float-b,
+  .animate-float-c,
+  .animate-pan-grid,
+  .animate-fade-in-up,
+  .animate-pulse-glow,
+  .animate-mesh-sweep,
+  .meteor-trail,
+  .reveal-card {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
