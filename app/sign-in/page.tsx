@@ -6,12 +6,14 @@ export default function SignInPage() {
   return (
     <AuthShell>
       <AuthCard>
-        <h2 className="text-2xl font-semibold">Sign in</h2>
-        <p className="mt-2 text-sm text-[var(--text-body)]">
-          Welcome back. Enter your details to continue.
-        </p>
+        <div className="text-center">
+          <h2 className="text-lg font-semibold">Sign in</h2>
+          <p className="mt-0.5 text-xs text-[var(--secondary-text)]">
+            Welcome back. Enter your details to continue.
+          </p>
+        </div>
 
-        <div className="mt-6">
+        <div className="mt-3">
           <SignInForm />
         </div>
       </AuthCard>

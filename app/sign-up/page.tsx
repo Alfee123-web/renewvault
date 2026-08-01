@@ -6,12 +6,14 @@ export default function SignUpPage() {
   return (
     <AuthShell>
       <AuthCard>
-        <h2 className="text-2xl font-semibold">Sign up</h2>
-        <p className="mt-2 text-sm text-[var(--text-body)]">
-          Create your RenewVault account to get started.
-        </p>
+        <div className="text-center">
+          <h2 className="text-lg font-semibold">Sign up</h2>
+          <p className="mt-0.5 text-xs text-[var(--secondary-text)]">
+            Create your RenewVault account to get started.
+          </p>
+        </div>
 
-        <div className="mt-6">
+        <div className="mt-3">
           <SignUpForm />
         </div>
       </AuthCard>

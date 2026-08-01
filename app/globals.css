@@ -52,6 +52,8 @@
 
   --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.16);
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.24);
+
+  --secondary-focus-ring: rgba(67, 56, 202, 0.38);
 }
 
 * {
@@ -195,4 +197,15 @@ a {
     opacity: 1 !important;
     transform: none !important;
   }
+}
+
+/* Force dark autofill background instead of Chrome's default white/yellow */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px var(--surface-2) inset !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
+  caret-color: var(--text-primary) !important;
+  transition: background-color 9999s ease-in-out 0s;
 }
