@@ -11,6 +11,28 @@ export function ResetPasswordForm({ token }: { token: string }) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
+  const [errors, setErrors] = useState<{
+    password?: string;
+    confirmPassword?: string;
+  }>({});
+
+  function validate() {
+    const nextErrors: { password?: string; confirmPassword?: string } = {};
+
+    if (!password.trim()) {
+      nextErrors.password = "Password is required.";
+    } else if (password.length < 8) {
+      nextErrors.password = "Password must be at least 8 characters.";
+    }
+
+    if (!confirmPassword.trim()) {
+      nextErrors.confirmPassword = "Please confirm your password.";
+    } else if (password !== confirmPassword) {
+      nextErrors.confirmPassword = "Passwords do not match.";
+    }
+
+    return nextErrors;
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -21,15 +43,10 @@ export function ResetPasswordForm({ token }: { token: string }) {
       return;
     }
 
-    if (password.length < 8) {
-      setMessage("Password must be at least 8 characters.");
-      return;
-    }
+    const nextErrors = validate();
+    setErrors(nextErrors);
 
-    if (password !== confirmPassword) {
-      setMessage("Passwords do not match.");
-      return;
-    }
+    if (Object.keys(nextErrors).length > 0) return;
 
     setIsSubmitting(true);
 
@@ -54,9 +71,9 @@ export function ResetPasswordForm({ token }: { token: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-5">
+    <form onSubmit={handleSubmit} noValidate className="w-full space-y-4">
       {message && (
-        <p className="rounded-[12px] border border-[var(--border)] bg-white/5 px-4 py-3 text-sm text-[var(--text-body)]">
+        <p className="rounded-[12px] border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 text-sm text-[var(--text-body)]">
           {message}
         </p>
       )}
@@ -64,7 +81,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
       <div>
         <label
           htmlFor="password"
-          className="mb-2 block text-sm text-[var(--text-secondary)]"
+          className="mb-1 block text-sm text-[var(--text-secondary)]"
         >
           New password
         </label>
@@ -74,14 +91,24 @@ export function ResetPasswordForm({ token }: { token: string }) {
           placeholder="Enter new password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          required
+          aria-invalid={!!errors.password}
+          aria-describedby={errors.password ? "password-error" : undefined}
+          autoComplete="new-password"
+          className={`bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--secondary)] focus:ring-[var(--secondary-focus-ring)] ${
+            errors.password ? "border-red-500/50 focus:border-red-400 focus:ring-red-500/20" : ""
+          }`}
         />
+        {errors.password && (
+          <p id="password-error" className="mt-1 text-xs text-red-400">
+            {errors.password}
+          </p>
+        )}
       </div>
 
       <div>
         <label
           htmlFor="confirmPassword"
-          className="mb-2 block text-sm text-[var(--text-secondary)]"
+          className="mb-1 block text-sm text-[var(--text-secondary)]"
         >
           Confirm password
         </label>
@@ -91,11 +118,25 @@ export function ResetPasswordForm({ token }: { token: string }) {
           placeholder="Confirm new password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          required
+          aria-invalid={!!errors.confirmPassword}
+          aria-describedby={errors.confirmPassword ? "confirm-password-error" : undefined}
+          autoComplete="new-password"
+          className={`bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--secondary)] focus:ring-[var(--secondary-focus-ring)] ${
+            errors.confirmPassword ? "border-red-500/50 focus:border-red-400 focus:ring-red-500/20" : ""
+          }`}
         />
+        {errors.confirmPassword && (
+          <p id="confirm-password-error" className="mt-1 text-xs text-red-400">
+            {errors.confirmPassword}
+          </p>
+        )}
       </div>
 
-      <Button type="submit" className="w-full" disabled={isSubmitting || !token}>
+      <Button
+        type="submit"
+        disabled={isSubmitting || !token}
+        className="w-full bg-[var(--secondary)] hover:bg-[var(--secondary-hover)] text-white border-none"
+      >
         {isSubmitting ? "Updating..." : "Reset password"}
       </Button>
     </form>

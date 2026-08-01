@@ -10,14 +10,16 @@ export default async function ResetPasswordPage({
   const { token } = await searchParams;
 
   return (
-    <AuthShell>
+    <AuthShell centered>
       <AuthCard>
-        <h2 className="text-2xl font-semibold">Reset password</h2>
-        <p className="mt-2 text-sm text-[var(--text-body)]">
-          Set a new password for your account.
-        </p>
+        <div className="text-center">
+          <h2 className="text-lg font-semibold">Reset password</h2>
+          <p className="mt-0.5 text-xs text-[var(--secondary-text)]">
+            Choose a new password for your account.
+          </p>
+        </div>
 
-        <div className="mt-6">
+        <div className="mt-5">
           <ResetPasswordForm token={token ?? ""} />
         </div>
       </AuthCard>
