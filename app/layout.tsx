@@ -7,6 +7,7 @@ const inter = Inter({
   display: "swap",
 });
 
+
 export const metadata: Metadata = {
   title: "RenewVault",
   description: "Track renewals, due dates, and reminders in one place.",
