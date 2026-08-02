@@ -1,0 +1,24 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="RenewVault logo">
+  <defs>
+    <linearGradient id="rv-stroke" x1="44" y1="42" x2="210" y2="214" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F97316"/>
+      <stop offset="0.52" stop-color="#F5B19E"/>
+      <stop offset="1" stop-color="#4338CA"/>
+    </linearGradient>
+    <radialGradient id="rv-glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(128 128) rotate(90) scale(116)">
+      <stop offset="0" stop-color="#F97316" stop-opacity="0.2"/>
+      <stop offset="0.55" stop-color="#4338CA" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#080808" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="rv-shadow" x="22" y="20" width="212" height="216" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000000" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+  <rect x="18" y="18" width="220" height="220" rx="40" fill="url(#rv-glow)" stroke="#242426"/>
+  <g filter="url(#rv-shadow)">
+    <path d="M128 42L191 71V121C191 164 163.7 200.4 128 214C92.3 200.4 65 164 65 121V71L128 42Z" fill="#0F0F10" stroke="url(#rv-stroke)" stroke-width="10" stroke-linejoin="round"/>
+    <path d="M98 96V88C98 71.4 111.4 58 128 58C144.6 58 158 71.4 158 88V96" stroke="url(#rv-stroke)" stroke-width="10" stroke-linecap="round"/>
+    <path d="M92 100H164C167.314 100 170 102.686 170 106V150C170 153.314 167.314 156 164 156H92C88.6863 156 86 153.314 86 150V106C86 102.686 88.6863 100 92 100Z" fill="#151516" stroke="#303034" stroke-width="2"/>
+    <path d="M111 146V112L149 146V112" stroke="url(#rv-stroke)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
