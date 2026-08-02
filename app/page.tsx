@@ -66,7 +66,7 @@ export default function Home() {
       <div className="animate-float-b pointer-events-none absolute top-[55vh] left-0 z-0 h-[420px] w-[420px] -translate-x-1/3 rounded-full bg-[var(--secondary)]/12 blur-[150px]" />
       <div className="animate-float-c pointer-events-none absolute top-[85vh] right-[10%] z-0 h-[300px] w-[300px] rounded-full bg-[var(--violet-glow)]/8 blur-[140px]" />
 
-      <section className="relative z-10 mx-auto flex min-h-screen w-full max-w-4xl flex-col items-center justify-center gap-12 px-6 py-8 text-center">
+      <section className="relative z-10 mx-auto flex min-h-screen w-full max-w-5xl flex-col items-center justify-center gap-12 px-6 py-8 text-center lg:px-8">
         <div className="flex w-full flex-col items-center text-center">
           <div className="animate-fade-in-up mb-6 flex items-center gap-2">
             <img src="/logo.svg" alt="RenewVault" className="h-9 w-9" />
@@ -75,15 +75,16 @@ export default function Home() {
             </span>
           </div>
 
-          <h1 className="animate-fade-in-up delay-100 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+          <h1 className="animate-fade-in-up delay-100 max-w-5xl text-4xl font-semibold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
             Track Renewals, Due Dates, and Reminders{" "}
             <span className="mt-2 block bg-gradient-to-r from-[var(--accent)] to-[var(--secondary)] bg-clip-text text-transparent">
               In One Place.
             </span>
           </h1>
 
-          <p className="animate-fade-in-up delay-200 mx-auto mt-6 max-w-md text-base leading-relaxed text-[var(--text-body)] sm:text-lg">
-            A simple workspace to manage important dates and never miss a renewal.
+          <p className="animate-fade-in-up delay-200 mx-auto mt-6 max-w-xl text-base leading-relaxed text-[var(--text-body)] sm:text-lg">
+            A simple workspace to manage important dates and never miss a
+            renewal.
           </p>
 
           <div className="animate-fade-in-up delay-300 mt-8 flex flex-row items-center justify-center gap-4">
