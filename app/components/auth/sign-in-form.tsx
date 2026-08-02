@@ -88,7 +88,10 @@ export function SignInForm() {
       )}
 
       <div>
-        <label htmlFor="email" className="mb-1 block text-sm text-[var(--text-secondary)]">
+        <label
+          htmlFor="email"
+          className="mb-1 block text-sm text-[var(--text-secondary)]"
+        >
           Email
         </label>
         <Input
@@ -99,8 +102,10 @@ export function SignInForm() {
           onChange={(e) => setEmail(e.target.value)}
           aria-invalid={!!errors.email}
           aria-describedby={errors.email ? "email-error" : undefined}
-          className={`bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--secondary)] focus:ring-[var(--secondary-focus-ring)] ${
-            errors.email ? "border-red-500/50 focus:border-red-400 focus:ring-red-500/20" : ""
+          className={`border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--secondary)] focus:ring-[var(--secondary-focus-ring)] ${
+            errors.email
+              ? "border-red-500/50 focus:border-red-400 focus:ring-red-500/20"
+              : ""
           }`}
         />
         {errors.email && (
@@ -111,7 +116,10 @@ export function SignInForm() {
       </div>
 
       <div>
-        <label htmlFor="password" className="mb-1 block text-sm text-[var(--text-secondary)]">
+        <label
+          htmlFor="password"
+          className="mb-1 block text-sm text-[var(--text-secondary)]"
+        >
           Password
         </label>
         <Input
@@ -122,8 +130,10 @@ export function SignInForm() {
           onChange={(e) => setPassword(e.target.value)}
           aria-invalid={!!errors.password}
           aria-describedby={errors.password ? "password-error" : undefined}
-          className={`bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--secondary)] focus:ring-[var(--secondary-focus-ring)] ${
-            errors.password ? "border-red-500/50 focus:border-red-400 focus:ring-red-500/20" : ""
+          className={`border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--secondary)] focus:ring-[var(--secondary-focus-ring)] ${
+            errors.password
+              ? "border-red-500/50 focus:border-red-400 focus:ring-red-500/20"
+              : ""
           }`}
         />
         {errors.password && (
@@ -144,7 +154,10 @@ export function SignInForm() {
           Remember me
         </label>
 
-        <Link href="/forgot-password" className="text-[var(--secondary-text)] hover:underline">
+        <Link
+          href="/forgot-password"
+          className="text-[var(--secondary-text)] hover:underline"
+        >
           Forgot password?
         </Link>
       </div>
@@ -152,7 +165,7 @@ export function SignInForm() {
       <Button
         type="submit"
         disabled={isSubmitting}
-        className="w-full bg-[var(--secondary)] hover:bg-[var(--secondary-hover)] text-white border-none"
+        className="w-full border-none bg-[var(--secondary)] text-white hover:bg-[var(--secondary-hover)]"
       >
         {isSubmitting ? "Signing in..." : "Sign in"}
       </Button>
@@ -169,7 +182,7 @@ export function SignInForm() {
         type="button"
         onClick={handleGoogleSignIn}
         disabled={isGoogleSigningIn}
-        className="flex w-full items-center justify-center gap-3 rounded-[14px] border border-[var(--border)] bg-transparent px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)] disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-[14px] border border-[var(--border)] bg-transparent px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] transition-colors duration-200 hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {!isGoogleSigningIn && (
           <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
@@ -196,12 +209,13 @@ export function SignInForm() {
 
       <p className="pt-1 text-center text-sm text-[var(--text-body)]">
         Don&apos;t have an account?{" "}
-        <Link href="/sign-up" className="text-[var(--secondary-text)] hover:underline">
+        <Link
+          href="/sign-up"
+          className="text-[var(--secondary-text)] hover:underline"
+        >
           Sign up
         </Link>
       </p>
-
-    
     </form>
   );
 }
