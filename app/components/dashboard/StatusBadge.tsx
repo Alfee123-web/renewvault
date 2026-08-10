@@ -1,25 +1,43 @@
-import { RenewalStatus } from "@/lib/types";
+import { Renewal } from "@/lib/types";
 
-const STATUS_STYLES: Record<RenewalStatus, { label: string; className: string }> = {
-  "upcoming": {
+interface StatusBadgeProps {
+  status: Renewal["status"];
+}
+
+const statusConfig: Record
+  Renewal["status"],
+  { label: string; className: string }
+> = {
+  upcoming: {
     label: "Upcoming",
-    className: "text-[var(--text-muted)] border-[var(--border)]",
+    className: "bg-[var(--secondary-soft)] text-[var(--secondary-text)]",
   },
   "due-soon": {
-    label: "Due soon",
-    className: "text-[var(--warning,#f59e0b)] border-[var(--warning,#f59e0b)]/40",
+    label: "Due Soon",
+    className: "bg-amber-500/10 text-amber-400",
   },
-  "overdue": {
+  overdue: {
     label: "Overdue",
-    className: "text-[var(--danger,#ef4444)] border-[var(--danger,#ef4444)]/40",
+    className: "bg-[var(--danger-soft)] text-[var(--danger-text)]",
+  },
+  renewed: {
+    label: "Renewed",
+    className: "bg-[var(--success-soft)] text-[var(--success-text)]",
+  },
+  cancelled: {
+    label: "Cancelled",
+    className: "bg-[var(--surface-3)] text-[var(--text-muted)]",
   },
 };
 
-export default function StatusBadge({ status }: { status: RenewalStatus }) {
-  const { label, className } = STATUS_STYLES[status];
+export default function StatusBadge({ status }: StatusBadgeProps) {
+  const config = statusConfig[status];
+
   return (
-    <span className={`rounded-full border px-3 py-1 text-xs font-medium ${className}`}>
-      {label}
+    <span
+      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${config.className}`}
+    >
+      {config.label}
     </span>
   );
 }

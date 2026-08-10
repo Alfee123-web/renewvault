@@ -14,10 +14,10 @@
   --text-muted: #71717a;
 
   /* Primary — attention, CTAs, "upcoming" */
-  --accent: #f97316;
-  --accent-hover: #ea580c;
-  --accent-soft: rgba(249, 115, 22, 0.12);
-  --focus-ring: rgba(249, 115, 22, 0.38);
+--accent: #4338ca;
+  --accent-hover: #3730a3;
+  --accent-soft: rgba(67, 56, 202, 0.12);
+  --focus-ring: rgba(67, 56, 202, 0.38);
 
   /* Secondary — trust, sync, secure, links */
   --secondary: #4338ca;
@@ -54,6 +54,10 @@
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.24);
 
   --secondary-focus-ring: rgba(67, 56, 202, 0.38);
+
+    /* Brand gradient anchor — matches logo gradient */
+  --ember: #f97316;
+  --ember-soft: rgba(249, 115, 22, 0.14);
 }
 
 * {
@@ -208,4 +212,47 @@ input:-webkit-autofill:active {
   -webkit-text-fill-color: var(--text-primary) !important;
   caret-color: var(--text-primary) !important;
   transition: background-color 9999s ease-in-out 0s;
+}
+
+/* SIDEBAR — active nav + brand glow  */
+
+
+.sidebar-header-glow {
+  background: radial-gradient(120% 80% at 0% 0%, rgba(249, 115, 22, 0.10), transparent 60%);
+}
+
+.nav-item-active {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--ember) 16%, transparent),
+    color-mix(in srgb, var(--accent) 24%, transparent)
+  );
+  border-left: 2px solid var(--ember);
+  color: var(--text-primary);
+}
+
+.nav-item-active svg {
+  color: var(--text-primary);
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* FOCUS STATES — keyboard nav a11y   */
+
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--focus-ring);
+  border-radius: var(--radius-md);
+}
+@theme {
+  --breakpoint-xs: 420px;
 }
