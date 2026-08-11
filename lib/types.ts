@@ -6,9 +6,17 @@ export type RenewalStatus = "upcoming" | "due-soon" | "overdue";
 export interface Renewal {
   id: string;
   name: string;
-  category: string; // e.g. "Subscription", "Domain", "Insurance"
-  dueDate: string; // ISO date string
-  amount?: number;
-  currency?: string;
-  status: RenewalStatus;
+  category: string;
+  dueDate: string; // ISO date string, e.g. "2026-08-02"
+  amount: number;
+  currency: string;
+  status: "upcoming" | "due-soon" | "overdue" | "renewed" | "cancelled";
+  reminderEnabled: boolean;
+  reminderDaysBefore: number | null;
+}
+
+export interface DashboardStats {
+  upcoming: number;
+  dueThisWeek: number;
+  savedReminders: number;
 }

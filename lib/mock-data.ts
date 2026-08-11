@@ -1,6 +1,6 @@
-import { Renewal } from "./types";
+import { Renewal, DashboardStats } from "./types";
 
-// TEMP: replace with a real fetch (e.g. `await fetch("/api/renewals")`)
+// TEMP: replace with a real fetch (e.g. await fetch("/api/renewals"))
 // once your teammate exposes the endpoint. Keep the return shape = Renewal[].
 export const mockRenewals: Renewal[] = [
   {
@@ -11,6 +11,8 @@ export const mockRenewals: Renewal[] = [
     amount: 11.99,
     currency: "USD",
     status: "due-soon",
+    reminderEnabled: true,
+    reminderDaysBefore: 3,
   },
   {
     id: "2",
@@ -20,6 +22,8 @@ export const mockRenewals: Renewal[] = [
     amount: 14.0,
     currency: "USD",
     status: "upcoming",
+    reminderEnabled: true,
+    reminderDaysBefore: 7,
   },
   {
     id: "3",
@@ -29,6 +33,8 @@ export const mockRenewals: Renewal[] = [
     amount: 54.99,
     currency: "USD",
     status: "upcoming",
+    reminderEnabled: false,
+    reminderDaysBefore: 3,
   },
   {
     id: "4",
@@ -38,10 +44,12 @@ export const mockRenewals: Renewal[] = [
     amount: 320,
     currency: "USD",
     status: "overdue",
+    reminderEnabled: true,
+    reminderDaysBefore: 14,
   },
 ];
 
-export const mockStats = {
+export const mockStats: DashboardStats = {
   upcoming: 12,
   dueThisWeek: 5,
   savedReminders: 24,
