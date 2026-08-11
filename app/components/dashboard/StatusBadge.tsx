@@ -4,7 +4,7 @@ interface StatusBadgeProps {
   status: Renewal["status"];
 }
 
-const statusConfig: Record
+const statusConfig: Record<
   Renewal["status"],
   { label: string; className: string }
 > = {

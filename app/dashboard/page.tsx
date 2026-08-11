@@ -4,6 +4,13 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { Renewal } from "@/lib/types";
 import RenewalCard from "@/app/components/dashboard/RenewalCard";
 import AddRenewalModal from "@/app/components/dashboard/AddRenewalModal";
+import {
+  getRenewals,
+  createRenewal,
+  updateRenewal,
+  deleteRenewal,
+  markRenewalAsRenewed,
+} from "@/app/actions/renewals";
 
 const FILTER_OPTIONS = [
   { label: "All", value: "all" },
@@ -21,57 +28,19 @@ const SORT_OPTIONS = [
   { label: "Amount (low to high)", value: "amount-asc" },
 ];
 
-function ClockIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
-    </svg>
-  );
-}
-function AlertIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-      <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
-    </svg>
-  );
-}
-function BellIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-    </svg>
-  );
-}
-function SearchIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500">
-      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-    </svg>
-  );
-}
-function CloseSmallIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-  );
-}
-function ArrowUpDownIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m21 16-4 4-4-4" /><path d="M17 20V4" /><path d="m3 8 4-4 4 4" /><path d="M7 4v16" />
-    </svg>
-  );
-}
+// --- ICONS ---
+function ClockIcon() { return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>; }
+function AlertIcon() { return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>; }
+function BellIcon() { return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>; }
+function SearchIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>; }
+function CloseSmallIcon() { return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>; }
+function ArrowUpDownIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21 16-4 4-4-4" /><path d="M17 20V4" /><path d="m3 8 4-4 4 4" /><path d="M7 4v16" /></svg>; }
+function SpinnerIcon() { return <svg className="animate-spin h-6 w-6 text-[#4338ca]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>; }
 
 export default function Dashboard() {
-  const [renewals, setRenewals] = useState<Renewal[]>([
-    { id: "1", name: "Spotify Premium", category: "Subscription", dueDate: "2026-08-02", amount: 11.99, currency: "USD", status: "due-soon", reminderEnabled: true, reminderDaysBefore: 7 },
-    { id: "2", name: "renewvault.app Domain", category: "Domain", dueDate: "2026-08-06", amount: 14.0, currency: "USD", status: "upcoming", reminderEnabled: true, reminderDaysBefore: 30 },
-    { id: "3", name: "Car Insurance", category: "Insurance", dueDate: "2026-07-28", amount: 320.0, currency: "USD", status: "overdue", reminderEnabled: false, reminderDaysBefore: null },
-  ]);
-
+  const [renewals, setRenewals] = useState<Renewal[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date-asc");
@@ -80,7 +49,22 @@ export default function Dashboard() {
   const [isSortOpen, setIsSortOpen] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
 
+  async function loadData() {
+    try {
+      setIsLoading(true);
+      const data = await getRenewals();
+      setRenewals(data);
+    } catch (error) {
+      console.error("Failed to load renewals:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadData();
+    
     function handleClickOutside(e: MouseEvent) {
       if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
         setIsSortOpen(false);
@@ -109,26 +93,61 @@ export default function Dashboard() {
 
     return [...filtered].sort((a, b) => {
       switch (sortBy) {
-        case "date-asc":
-          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-        case "date-desc":
-          return new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
-        case "amount-desc":
-          return b.amount - a.amount;
-        case "amount-asc":
-          return a.amount - b.amount;
-        default:
-          return 0;
+        case "date-asc": return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+        case "date-desc": return new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
+        case "amount-desc": return b.amount - a.amount;
+        case "amount-asc": return a.amount - b.amount;
+        default: return 0;
       }
     });
   }, [renewals, searchQuery, activeFilter, sortBy]);
 
-  const handleAddRenewal = (newRenewal: Renewal) => setRenewals((prev) => [...prev, newRenewal]);
-  const handleUpdateRenewal = (updatedRenewal: Renewal) =>
+  // --- ASYNC DATABASE MUTATIONS ---
+  const handleAddRenewal = async (newRenewal: Renewal) => {
+    try {
+      // Exclude client-generated Math.random ID securely
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { id, ...dataToSave } = newRenewal;
+      const saved = await createRenewal(dataToSave as Omit<Renewal, "id">);
+      setRenewals((prev) => [...prev, saved]);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleUpdateRenewal = async (updatedRenewal: Renewal) => {
+    // Optimistic UI update
     setRenewals((prev) => prev.map((r) => (r.id === updatedRenewal.id ? updatedRenewal : r)));
-  const handleDeleteRenewal = (id: string) => setRenewals((prev) => prev.filter((r) => r.id !== id));
-  const handleMarkRenewed = (id: string) =>
+    try {
+      await updateRenewal(updatedRenewal.id, updatedRenewal);
+    } catch (error) {
+      console.error("Failed to update, reverting...", error);
+      loadData(); // Revert on failure
+    }
+  };
+
+  const handleDeleteRenewal = async (id: string) => {
+    // Optimistic UI update
+    setRenewals((prev) => prev.filter((r) => r.id !== id));
+    try {
+      await deleteRenewal(id);
+    } catch (error) {
+      console.error("Failed to delete, reverting...", error);
+      loadData(); // Revert on failure
+    }
+  };
+
+  const handleMarkRenewed = async (id: string) => {
+    // Optimistic UI update
     setRenewals((prev) => prev.map((r) => (r.id === id ? { ...r, status: "renewed" } : r)));
+    try {
+      await markRenewalAsRenewed(id);
+    } catch (error) {
+      console.error("Failed to mark renewed, reverting...", error);
+      loadData(); // Revert on failure
+    }
+  };
+
   const openEditModal = (renewal: Renewal) => {
     setEditingRenewal(renewal);
     setIsModalOpen(true);
@@ -142,7 +161,6 @@ export default function Dashboard() {
 
   return (
     <div className="relative min-h-screen bg-transparent px-4 py-10 sm:px-6 lg:px-8">
-
       {/* --- ATMOSPHERIC BACKGROUND --- */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[var(--bg)]">
         <div className="absolute inset-0 animate-mesh-sweep opacity-40"></div>
@@ -156,7 +174,6 @@ export default function Dashboard() {
       </div>
 
       <div className="relative z-10 mx-auto max-w-6xl">
-
         {/* Header */}
         <div className="flex flex-col gap-4 mb-8 pt-14 lg:pt-0 sm:flex-row sm:items-center sm:justify-between animate-fade-in-up">
           <div>
@@ -184,7 +201,7 @@ export default function Dashboard() {
                 </span>
               </div>
               <p className={`text-3xl font-bold mt-3 ${color === "text-amber-400" ? color : "text-white"}`}>
-                {value}
+                {isLoading ? "-" : value}
               </p>
             </div>
           ))}
@@ -192,8 +209,6 @@ export default function Dashboard() {
 
         {/* --- COMMAND / FILTER BAR --- */}
         <div className="flex flex-col gap-4 mb-8 rounded-2xl border border-zinc-800 bg-[#121214]/90 backdrop-blur-md p-3.5 shadow-sm animate-fade-in-up delay-200 lg:flex-row lg:items-center lg:justify-between">
-
-          {/* Search Box */}
           <div className="relative w-full lg:w-72">
             <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
               <SearchIcon />
@@ -206,80 +221,61 @@ export default function Dashboard() {
               className="w-full rounded-xl border border-zinc-800 bg-zinc-900/60 pl-9 pr-8 py-2 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#4338ca] transition-colors"
             />
             {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute inset-y-0 right-2.5 flex items-center text-zinc-400 hover:text-white"
-              >
+              <button onClick={() => setSearchQuery("")} className="absolute inset-y-0 right-2.5 flex items-center text-zinc-400 hover:text-white">
                 <CloseSmallIcon />
               </button>
             )}
           </div>
 
-          {/* Filter Pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide lg:flex-wrap lg:overflow-visible lg:pb-0 lg:mx-0 lg:px-0">
-            {FILTER_OPTIONS.map((option) => {
-              const isActive = activeFilter === option.value;
-              return (
-                <button
-                  key={option.value}
-                  onClick={() => setActiveFilter(option.value)}
-                  className={`shrink-0 rounded-xl px-3.5 py-1.5 text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
-                    isActive
-                      ? "bg-[#4338ca] text-white shadow-sm"
-                      : "bg-zinc-900/40 text-zinc-400 border border-zinc-800/80 hover:text-white hover:border-zinc-700"
-                  }`}
-                >
-                  {option.label}
-                </button>
-              );
-            })}
+            {FILTER_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setActiveFilter(option.value)}
+                className={`shrink-0 rounded-xl px-3.5 py-1.5 text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
+                  activeFilter === option.value ? "bg-[#4338ca] text-white shadow-sm" : "bg-zinc-900/40 text-zinc-400 border border-zinc-800/80 hover:text-white hover:border-zinc-700"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
         </div>
 
         {/* Section Status & Results Header */}
         <div className="flex flex-col gap-3 mb-4 px-1 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-            Showing {filteredRenewals.length} {filteredRenewals.length === 1 ? 'renewal' : 'renewals'}
+            Showing {isLoading ? "..." : `${filteredRenewals.length} ${filteredRenewals.length === 1 ? 'renewal' : 'renewals'}`}
           </p>
-
           <div className="relative self-start sm:self-auto" ref={sortRef}>
-            <button
-              onClick={() => setIsSortOpen((prev) => !prev)}
-              className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/60 pl-3 pr-3 py-1.5 text-xs font-medium text-zinc-300 hover:border-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] transition-colors cursor-pointer"
-            >
+            <button onClick={() => setIsSortOpen(!isSortOpen)} className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/60 pl-3 pr-3 py-1.5 text-xs font-medium text-zinc-300 hover:border-zinc-700 transition-colors cursor-pointer">
               <ArrowUpDownIcon />
               <span>{activeSortLabel}</span>
             </button>
-
             {isSortOpen && (
               <div className="absolute right-0 z-20 mt-1.5 w-48 overflow-hidden rounded-xl border border-zinc-800 bg-[#121214] shadow-lg">
-                {SORT_OPTIONS.map((opt) => {
-                  const isActive = sortBy === opt.value;
-                  return (
-                    <button
-                      key={opt.value}
-                      onClick={() => {
-                        setSortBy(opt.value);
-                        setIsSortOpen(false);
-                      }}
-                      className={`block w-full px-3.5 py-2.5 text-left text-xs font-medium transition-colors cursor-pointer ${
-                        isActive
-                          ? "bg-[#4338ca] text-white"
-                          : "text-zinc-300 hover:bg-zinc-800/80"
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  );
-                })}
+                {SORT_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => { setSortBy(opt.value); setIsSortOpen(false); }}
+                    className={`block w-full px-3.5 py-2.5 text-left text-xs font-medium transition-colors cursor-pointer ${sortBy === opt.value ? "bg-[#4338ca] text-white" : "text-zinc-300 hover:bg-zinc-800/80"}`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
               </div>
             )}
           </div>
         </div>
 
-        {/* Card Grid */}
+        {/* Card Grid / Loading State / Empty State */}
         <div className="animate-fade-in-up delay-300">
-          {filteredRenewals.length === 0 ? (
+          {isLoading ? (
+            <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 backdrop-blur-md py-24 flex flex-col items-center justify-center">
+               <SpinnerIcon />
+               <p className="mt-4 text-sm text-zinc-400 font-medium">Loading your vault...</p>
+            </div>
+          ) : filteredRenewals.length === 0 ? (
             <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 backdrop-blur-md border-dashed py-16 text-center">
               <p className="text-zinc-300 font-medium text-sm">No renewals found</p>
               <p className="text-zinc-500 text-xs mt-1">Try adjusting your search terms or filter selection.</p>

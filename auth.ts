@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { User } from "next-auth";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
@@ -6,7 +6,6 @@ import { prisma } from "@/lib/prisma";
 import { compare } from "bcryptjs";
 import { authConfig } from "./auth.config";
 
-const REMEMBER_AGE = 30 * 24 * 60 * 60; // 30 days
 const DEFAULT_AGE = 60 * 60; // 1 hour
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -54,7 +53,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: user.name,
           email: user.email,
           remember: credentials.remember,
-        } as any;
+        } as User & { remember?: string };
       },
     }),
   ],
@@ -62,7 +61,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.sub = user.id;
-        token.remember = (user as any).remember;
+        token.remember = (user as User & { remember?: string }).remember;
       }
       return token;
     },

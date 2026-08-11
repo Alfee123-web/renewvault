@@ -15,8 +15,10 @@ model User {
   password      String?
   accounts      Account[]
   sessions      Session[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  renewals      Renewal[] // <-- The new relation
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Account {
@@ -26,7 +28,7 @@ model Account {
   provider          String
   providerAccountId String
   refresh_token     String?
-  access_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
@@ -62,4 +64,29 @@ model PasswordResetToken {
   createdAt DateTime @default(now())
 
   @@index([email])
+}
+
+model Renewal {
+  id                 String   @id @default(cuid())
+  name               String
+  category           String
+  dueDate            DateTime
+  amount             Float
+  currency           String   @default("USD")
+  status             String   @default("upcoming")
+  reminderEnabled    Boolean  @default(false)
+  reminderDaysBefore Int?
+
+  // V2 Future-proofing
+  websiteDomain String?
+  notes         String?
+
+  // Relation to User
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }

@@ -40,6 +40,7 @@ export default function AddRenewalModal({
 
   useEffect(() => {
     if (editingRenewal) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         name: editingRenewal.name,
         category: editingRenewal.category,
@@ -230,28 +231,28 @@ export default function AddRenewalModal({
                 </svg>
               </div>
 
-              {isReminderOpen && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setIsReminderOpen(false)} />
-                  <div className="absolute z-20 w-full mt-1 rounded-xl border border-[var(--border)] bg-[#121212] shadow-xl overflow-hidden py-1 animate-fade-in-up">
-                    {reminders.map((reminder) => (
-                      <div
-                        key={reminder.value}
-                        onClick={() => {
-                          setFormData({ ...formData, reminderSetting: reminder.value });
-                          setIsReminderOpen(false);
-                        }}
-                        className="px-4 py-3 text-sm cursor-pointer text-white hover:bg-[#5b5fd8] transition-colors flex justify-between items-center"
-                      >
-                        {reminder.label}
-                        {formData.reminderSetting === reminder.value && (
-                          <span className="text-xs text-white/50">✓</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
+                      {isReminderOpen && (
+                        <>
+                          <div className="fixed inset-0 z-10" onClick={() => setIsReminderOpen(false)} />
+                          <div className="absolute z-20 w-full mt-1 rounded-xl border border-[var(--border)] bg-[#121212] shadow-xl overflow-hidden py-1 animate-fade-in-up">
+                            {reminders.map((reminder) => (
+                              <div
+                                key={reminder.value}
+                                onClick={() => {
+                                  setFormData({ ...formData, reminderSetting: reminder.value });
+                                  setIsReminderOpen(false);
+                                }}
+                                className="px-4 py-3 text-sm cursor-pointer text-white hover:bg-[#5b5fd8] transition-colors flex justify-between items-center"
+                              >
+                                {reminder.label}
+                                {formData.reminderSetting === reminder.value && (
+                                  <span className="text-xs text-white/50">✓</span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      )}
             </div>
           </div>
 
