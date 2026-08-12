@@ -155,10 +155,7 @@ export default function Home() {
       <div className="animate-float-b pointer-events-none absolute top-[55vh] left-0 z-0 h-[420px] w-[420px] -translate-x-1/3 rounded-full bg-[var(--secondary)]/12 blur-[150px]" />
       <div className="animate-float-c pointer-events-none absolute top-[85vh] right-[10%] z-0 h-[300px] w-[300px] rounded-full bg-[var(--violet-glow)]/8 blur-[140px]" />
 
-      {/* Live Status Pill at the very top */}
-      <StatusPill />
-
-      <section className="relative z-10 mx-auto flex w-full max-w-7xl flex-col items-center justify-center gap-14 px-6 pb-32 pt-4 lg:min-h-[calc(100vh-80px)] lg:flex-row lg:items-center lg:justify-between lg:gap-10 lg:pb-24 lg:px-8">
+      <section className="relative z-10 mx-auto flex w-full max-w-7xl flex-col items-center justify-center gap-14 px-6 pb-32 pt-16 lg:min-h-[calc(100vh-80px)] lg:flex-row lg:items-center lg:justify-between lg:gap-10 lg:pb-24 lg:px-8">
         {/* Left: copy */}
         <div className="flex w-full max-w-2xl flex-col items-center text-center lg:items-start lg:text-left">
           <div className="animate-fade-in-up mb-6 flex items-center gap-2">
@@ -278,8 +275,14 @@ export default function Home() {
       {/* Interactive Feature Grid with mouse-tracking */}
       <FeatureGrid />
 
-      <footer className="relative z-10 border-t border-[var(--border)] py-8 text-center text-sm text-[var(--text-muted)] backdrop-blur-sm">
-        © 2026 RenewVault. All rights reserved.
+      {/* Updated Footer with Status Pill */}
+      <footer className="relative z-10 border-t border-[var(--border)] py-6 backdrop-blur-sm mt-auto">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 lg:px-8">
+          <span className="text-sm text-[var(--text-muted)]">
+            © 2026 RenewVault. All rights reserved.
+          </span>
+          <StatusPill />
+        </div>
       </footer>
 
       <style jsx global>{`
