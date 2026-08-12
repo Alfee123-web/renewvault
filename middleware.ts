@@ -1,8 +1,9 @@
 import NextAuth from "next-auth";
 import { authConfig } from "./auth.config";
 
-// This exports the Auth.js function under the exact name Next.js expects ("middleware")
-export const { auth: middleware } = NextAuth(authConfig);
+// Explicitly define the auth function and export it as the default
+const { auth } = NextAuth(authConfig);
+export default auth;
 
 export const config = {
   // This tells Next.js to protect all routes EXCEPT public files and API routes
