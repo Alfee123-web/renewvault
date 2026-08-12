@@ -68,7 +68,7 @@ export async function processDailyReminders() {
         ] : [];
 
         await resend.emails.send({
-          from: "onboarding@resend.dev", 
+          from: "RenewVault <reminders@renewvault.me>", 
           to: renewal.user.email, 
           subject: `Reminder: ${renewal.name} renews soon`,
           html: html,
