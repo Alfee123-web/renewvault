@@ -5,8 +5,6 @@ import fs from "fs/promises";
 import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
 
-const MY_EMAIL = "trivediakshat02@gmail.com";
-
 function normalizeBaseUrl(url: string) {
   return url.endsWith("/") ? url.slice(0, -1) : url;
 }
@@ -96,7 +94,7 @@ function getResetPasswordEmailHtml(resetUrl: string) {
 export async function POST(req: Request) {
   try {
     const apiKey = process.env.RESEND_API_KEY;
-    const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+    const fromEmail = process.env.RESEND_FROM_EMAIL || "RenewVault <reminders@renewvault.me>";
     const appUrl = normalizeBaseUrl(
       process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
     );
@@ -115,15 +113,6 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { message: "Email is required" },
         { status: 400 }
-      );
-    }
-
-    if (email !== MY_EMAIL) {
-      return NextResponse.json(
-        {
-          message: "Local testing mode: only your Gmail can receive reset emails.",
-        },
-        { status: 403 }
       );
     }
 
@@ -156,7 +145,7 @@ export async function POST(req: Request) {
 
     const { error } = await resend.emails.send({
       from: fromEmail,
-      to: MY_EMAIL,
+      to: email,
       subject: "Reset your RenewVault password",
       html,
       attachments: [
