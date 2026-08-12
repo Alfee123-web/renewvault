@@ -25,13 +25,6 @@ function getResetPasswordEmailHtml(resetUrl: string) {
         <div style="margin:0 auto;max-width:640px;padding:40px 20px;">
           <div style="border:1px solid #222235;background:#11111a;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.35);">
             <div style="padding:32px 32px 20px 32px;border-bottom:1px solid #1f1f2b;text-align:center;">
-              <img
-                src="cid:renewvault-logo"
-                alt="RenewVault"
-                width="44"
-                height="44"
-                style="display:block;margin:0 auto 14px auto;"
-              />
               <div style="font-size:20px;font-weight:700;letter-spacing:0.2px;color:#ffffff;font-family:'Inter',Arial,Helvetica,sans-serif;">
                 RenewVault
               </div>
@@ -140,21 +133,26 @@ export async function POST(req: Request) {
     const resetUrl = `${appUrl}/reset-password?token=${token}`;
     const html = getResetPasswordEmailHtml(resetUrl);
 
-    const logoPath = path.join(process.cwd(), "public", "logo.svg");
-    const logoBuffer = await fs.readFile(logoPath);
+    // Safely attempt to read logo (supports svg or png if present)
+    let attachments: any[] = [];
+    try {
+      const logoPath = path.join(process.cwd(), "public", "logo.svg");
+      const logoBuffer = await fs.readFile(logoPath);
+      attachments.push({
+        filename: "logo.svg",
+        content: logoBuffer,
+        contentId: "renewvault-logo",
+      });
+    } catch {
+      // Ignore if logo doesn't exist so email still sends successfully
+    }
 
     const { error } = await resend.emails.send({
       from: fromEmail,
       to: email,
       subject: "Reset your RenewVault password",
       html,
-      attachments: [
-        {
-          filename: "logo.svg",
-          content: logoBuffer,
-          contentId: "renewvault-logo",
-        },
-      ],
+      attachments,
     });
 
     if (error) {
