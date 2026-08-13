@@ -1,36 +1,138 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RenewVault
+
+RenewVault is a full-stack subscription and renewal tracking web application. It helps users keep track of recurring subscriptions, upcoming renewals, and reminders — all in one clean, responsive dashboard.
+
+## Features
+
+- **Dashboard overview** — welcome summary, filterable and sortable list of active renewals
+- **Renewal cards** — status-colored indicators (active, due soon, expired) with quick actions
+- **Reminders** — automated notifications for upcoming renewal dates via scheduled cron jobs
+- **Settings** — manage account and notification preferences
+- **Responsive sidebar navigation** — collapsible layout that adapts across desktop and mobile
+- **Auth** — secure sign-in/sign-up flow
+
+## Tech Stack
+
+**Frontend**
+- [Next.js](https://nextjs.org/) (App Router)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Tailwind CSS](https://tailwindcss.com/) with a custom CSS variable–based design token system
+
+**Backend**
+- Node.js / Next.js API routes
+- Database via Prisma ORM
+- Authentication & middleware
+- Cron-based scheduled jobs for reminder notifications
+
+## Project Structure
+
+```
+renewvault/
+├── app/
+│   ├── dashboard/
+│   │   ├── page.tsx
+│   │   ├── layout.tsx
+│   │   ├── renewals/
+│   │   ├── reminders/
+│   │   └── settings/
+│   ├── components/
+│   │   └── dashboard/
+│   ├── icon.svg
+│   └── globals.css
+├── lib/
+│   ├── types.ts        # Shared types (frontend + backend)
+│   ├── mock-data.ts     # Frontend-only mock data
+│   └── prisma.ts        # Backend database client
+├── public/
+└── README.md
+```
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+- A `.env` file with the required environment variables (see `.env.example`)
+
+### Installation
+
+```bash
+git clone https://github.com/<your-org>/renewvault.git
+cd renewvault
+npm install
+```
+
+### Running Locally
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app will be available at `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create a `.env` file in the project root with the following:
 
-## Learn More
+```
+DATABASE_URL=
+NEXTAUTH_SECRET=
+NEXTAUTH_URL=
+SMTP_HOST=
+SMTP_PORT=
+SMTP_USER=
+SMTP_PASS=
+```
 
-To learn more about Next.js, take a look at the following resources:
+> Reach out to a project maintainer for actual values — never commit real credentials.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Design System
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+RenewVault uses a CSS custom properties–based token system defined in `globals.css`, anchored around:
 
-## Deploy on Vercel
+- Background: `#0B0B0E`
+- Accent (Indigo): `#4F46E5`
+- Gradient: Ember (`#F0873E`) → Lilac (`#A879E8`)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+All new components should use existing tokens (`--bg`, `--surface`, `--accent`, `--border`, `--text-primary`, `--text-muted`, `--radius-lg`) rather than hardcoded values.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Contributing
+
+This project is developed collaboratively with scoped ownership:
+
+- **Frontend/UI** — dashboard screens, layout, components, styling
+- **Backend** — database, auth, middleware, API routes, cron jobs
+
+### Branching & PRs
+
+1. Create a feature branch off `main`
+2. Keep PRs scoped to your area (frontend or backend) where possible
+3. Coordinate on shared files like `lib/types.ts` before renaming or removing types — additions are generally safe
+4. Write clear PR descriptions with a scope statement (what was touched, what wasn't)
+
+```bash
+git checkout main
+git pull origin main
+git checkout -b feature/your-feature-name
+```
+
+## API Endpoints (Backend)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/renewals` | Fetch all renewals |
+| POST | `/api/renewals` | Create a new renewal |
+| PATCH | `/api/renewals/:id` | Update a renewal |
+| DELETE | `/api/renewals/:id` | Delete a renewal |
+| GET | `/api/dashboard/stats` | Fetch dashboard summary stats |
+
+## Roadmap
+
+- [ ] Replace mock data with live API integration
+- [ ] Finalize reminder notification delivery (email/in-app)
+- [ ] Additional dashboard features (see project mind map)
+
+## License
+
+Specify your license here (e.g. MIT).
