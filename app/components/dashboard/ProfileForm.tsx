@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { updateProfileName, uploadAvatar } from "@/app/actions/profile";
+import { updateProfile, uploadAvatar } from "@/app/actions/profile";
 
 // Icons
 const UserIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>;
@@ -32,12 +32,17 @@ export default function ProfileForm({ user }: ProfileFormProps) {
 
   async function handleSave(formData: FormData) {
     setIsSaving(true);
-    await updateProfileName(formData);
-    setIsEditing(false);
-    setIsSaving(false);
+    try {
+      await updateProfile(formData);
+      setIsEditing(false);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to save changes.");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
-  // NEW: Handle real avatar upload to Vercel Blob
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -48,13 +53,19 @@ export default function ProfileForm({ user }: ProfileFormProps) {
 
     try {
       const newUrl = await uploadAvatar(formData);
-      setAvatarUrl(newUrl); // Instantly show new avatar
+      setAvatarUrl(newUrl); // Shows the new picture, but hasn't saved to DB yet!
     } catch (error) {
       console.error("Upload error:", error);
-      alert("Failed to upload image. Ensure Vercel Blob is configured.");
+      alert("Failed to upload image.");
     } finally {
       setIsUploading(false);
     }
+  }
+
+  // Handle Cancel: Revert to the original saved image and close edit mode
+  function handleCancel() {
+    setAvatarUrl(user.image || ""); 
+    setIsEditing(false);
   }
 
   return (
@@ -72,31 +83,47 @@ export default function ProfileForm({ user }: ProfileFormProps) {
       </div>
 
       <form action={handleSave} className="p-6">
+        
+        {/* HIDDEN INPUT: Sends the current avatarUrl to the server when "Save" is clicked */}
+        <input type="hidden" name="image" value={avatarUrl} />
+
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
           
           {/* Avatar Area */}
-          <div className="relative group">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#4338ca] to-[#3730a3] text-2xl font-bold text-white shadow-lg border-2 border-zinc-800 overflow-hidden">
-              {avatarUrl ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img src={avatarUrl} alt={user.name || "User"} className="h-full w-full object-cover" />
-              ) : (
-                initials
+          <div className="flex flex-col items-center justify-center shrink-0">
+            <div className="relative group">
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#4338ca] to-[#3730a3] text-2xl font-bold text-white shadow-lg border-2 border-zinc-800 overflow-hidden">
+                {avatarUrl ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={avatarUrl} alt={user.name || "User"} className="h-full w-full object-cover" />
+                ) : (
+                  initials
+                )}
+              </div>
+              
+              {isEditing && (
+                <label className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
+                  {isUploading ? <span className="text-[10px] text-white">...</span> : <CameraIcon />}
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden" 
+                    onChange={handleFileChange}
+                    disabled={isUploading}
+                  />
+                </label>
               )}
             </div>
             
-            {/* Avatar Edit Overlay */}
-            {isEditing && (
-              <label className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
-                {isUploading ? <span className="text-[10px] text-white">...</span> : <CameraIcon />}
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  className="hidden" 
-                  onChange={handleFileChange}
-                  disabled={isUploading}
-                />
-              </label>
+            {/* Remove Picture Button */}
+            {isEditing && avatarUrl && (
+              <button
+                type="button"
+                onClick={() => setAvatarUrl("")}
+                className="mt-2 text-[10px] font-medium text-red-400/80 hover:text-red-400 transition-colors cursor-pointer"
+              >
+                Remove picture
+              </button>
             )}
           </div>
 
@@ -135,19 +162,19 @@ export default function ProfileForm({ user }: ProfileFormProps) {
           </div>
         </div>
 
-        {/* Action Buttons (Only visible when editing) */}
+        {/* Action Buttons */}
         {isEditing && (
           <div className="mt-6 flex items-center justify-end gap-3 border-t border-zinc-800/50 pt-4 animate-fade-in-up">
             <button
               type="button"
-              onClick={() => setIsEditing(false)}
+              onClick={handleCancel}
               className="rounded-lg px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={isSaving}
+              disabled={isSaving || isUploading}
               className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-4 py-2 text-sm font-medium text-emerald-400 transition-colors hover:bg-emerald-500/20 disabled:opacity-50 cursor-pointer"
             >
               {isSaving ? "Saving..." : "Save Changes"}
