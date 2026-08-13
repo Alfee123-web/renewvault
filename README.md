@@ -185,6 +185,4 @@ git checkout -b feature/your-feature-name
 - [Alfee123-web](https://github.com/Alfee123-web) — Frontend / UI
 - [akshat1602](https://github.com/akshat1602) — Backend / Auth / Database
 
-## License
 
-Specify your license here (e.g. MIT).
