@@ -25,6 +25,13 @@ function getResetPasswordEmailHtml(resetUrl: string) {
         <div style="margin:0 auto;max-width:640px;padding:40px 20px;">
           <div style="border:1px solid #222235;background:#11111a;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.35);">
             <div style="padding:32px 32px 20px 32px;border-bottom:1px solid #1f1f2b;text-align:center;">
+              <img
+                src="cid:renewvault-logo"
+                alt="RenewVault"
+                width="44"
+                height="44"
+                style="display:block;margin:0 auto 14px auto;"
+              />
               <div style="font-size:20px;font-weight:700;letter-spacing:0.2px;color:#ffffff;font-family:'Inter',Arial,Helvetica,sans-serif;">
                 RenewVault
               </div>
@@ -89,7 +96,7 @@ export async function POST(req: Request) {
     const apiKey = process.env.RESEND_API_KEY;
     const fromEmail = process.env.RESEND_FROM_EMAIL || "RenewVault <reminders@renewvault.me>";
     const appUrl = normalizeBaseUrl(
-      process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+      process.env.NEXT_PUBLIC_APP_URL || "https://renewvault.me"
     );
 
     if (!apiKey) {
@@ -133,7 +140,7 @@ export async function POST(req: Request) {
     const resetUrl = `${appUrl}/reset-password?token=${token}`;
     const html = getResetPasswordEmailHtml(resetUrl);
 
-    // Safely attempt to read logo (supports svg or png if present)
+    // Safely attempt to read logo
     let attachments: any[] = [];
     try {
       const logoPath = path.join(process.cwd(), "public", "logo.svg");
