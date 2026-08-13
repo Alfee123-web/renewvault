@@ -2,6 +2,20 @@
 
 RenewVault is a full-stack subscription and renewal tracking web application. It helps users keep track of recurring subscriptions, upcoming renewals, and reminders — all in one clean, responsive dashboard.
 
+## Preview
+
+**Sign In**
+
+![Sign In](public/screenshots/signin-preview.png)
+
+**Sign Up**
+
+![Sign Up](public/screenshots/signup-preview.png)
+
+**Dashboard**
+
+![Dashboard](public/screenshots/dashboard-preview.png)
+
 ## Features
 
 - **Dashboard overview** — welcome summary, filterable and sortable list of active renewals
@@ -14,14 +28,19 @@ RenewVault is a full-stack subscription and renewal tracking web application. It
 ## Tech Stack
 
 **Frontend**
-- [Next.js](https://nextjs.org/) (App Router)
+- [Next.js 16](https://nextjs.org/) (App Router)
+- [React 19](https://react.dev/)
 - [TypeScript](https://www.typescriptlang.org/)
-- [Tailwind CSS](https://tailwindcss.com/) with a custom CSS variable–based design token system
+- [Tailwind CSS v4](https://tailwindcss.com/) with a custom CSS variable–based design token system
 
 **Backend**
-- Node.js / Next.js API routes
-- Database via Prisma ORM
-- Authentication & middleware
+- Next.js API routes (Node.js)
+- [PostgreSQL](https://www.postgresql.org/) via `pg`
+- [Prisma ORM](https://www.prisma.io/) (`@prisma/client`, `@prisma/adapter-pg`)
+- [Auth.js / NextAuth v5](https://authjs.dev/) with `@auth/prisma-adapter` for authentication
+- [bcryptjs](https://www.npmjs.com/package/bcryptjs) for password hashing
+- [Resend](https://resend.com/) for transactional/reminder emails
+- [Vercel Blob](https://vercel.com/docs/storage/vercel-blob) for file storage
 - Cron-based scheduled jobs for reminder notifications
 
 ## Project Structure
@@ -43,7 +62,10 @@ renewvault/
 │   ├── types.ts        # Shared types (frontend + backend)
 │   ├── mock-data.ts     # Frontend-only mock data
 │   └── prisma.ts        # Backend database client
+├── prisma/
+│   └── schema.prisma    # Database schema
 ├── public/
+│   └── screenshots/
 └── README.md
 ```
 
@@ -51,17 +73,50 @@ renewvault/
 
 ### Prerequisites
 
-- Node.js 18+
-- npm or yarn
-- A `.env` file with the required environment variables (see `.env.example`)
+- Node.js 20+
+- npm
+- A PostgreSQL database (local or hosted, e.g. Neon, Supabase, Vercel Postgres)
+- A `.env` file with the required environment variables
 
 ### Installation
 
 ```bash
-git clone https://github.com/<your-org>/renewvault.git
+git clone https://github.com/Alfee123-web/renewvault.git
 cd renewvault
 npm install
 ```
+
+`npm install` automatically runs `prisma generate` via the `postinstall` script.
+
+### Environment Variables
+
+Create a `.env` file in the project root with the following:
+
+```
+# Database
+DATABASE_URL=
+
+# Auth.js / NextAuth
+AUTH_SECRET=
+NEXTAUTH_URL=
+
+# Email (Resend)
+RESEND_API_KEY=
+
+# File storage (Vercel Blob)
+BLOB_READ_WRITE_TOKEN=
+```
+
+> Reach out to a project maintainer for actual values — never commit real credentials.
+
+### Database Setup
+
+```bash
+npx prisma migrate dev
+npx prisma generate
+```
+
+Use `npx prisma studio` to browse and edit data locally.
 
 ### Running Locally
 
@@ -71,21 +126,13 @@ npm run dev
 
 The app will be available at `http://localhost:3000`.
 
-### Environment Variables
+### Other Scripts
 
-Create a `.env` file in the project root with the following:
-
+```bash
+npm run build   # Production build
+npm run start   # Start production server
+npm run lint    # Run ESLint
 ```
-DATABASE_URL=
-NEXTAUTH_SECRET=
-NEXTAUTH_URL=
-SMTP_HOST=
-SMTP_PORT=
-SMTP_USER=
-SMTP_PASS=
-```
-
-> Reach out to a project maintainer for actual values — never commit real credentials.
 
 ## Design System
 
@@ -132,6 +179,11 @@ git checkout -b feature/your-feature-name
 - [ ] Replace mock data with live API integration
 - [ ] Finalize reminder notification delivery (email/in-app)
 - [ ] Additional dashboard features (see project mind map)
+
+## Contributors
+
+- [Alfee123-web](https://github.com/Alfee123-web) — Frontend / UI
+- [akshat1602](https://github.com/akshat1602) — Backend / Auth / Database
 
 ## License
 
