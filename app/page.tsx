@@ -82,11 +82,27 @@ const LOG_MESSAGES = [
 
 export default function Home() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [visibleLogs, setVisibleLogs] = useState<
-    { key: number; text: string }[]
-  >([{ key: 0, text: LOG_MESSAGES[0] }]);
+  const [visibleLogs, setVisibleLogs] = useState<{ key: number; text: string }[]>([
+    { key: 0, text: LOG_MESSAGES[0] },
+  ]);
   const logIndexRef = useRef(1);
   const logKeyRef = useRef(1);
+
+  // --- NEW: State to hold the dynamic destination URL ---
+  const [targetUrl, setTargetUrl] = useState("/sign-in");
+
+  // --- NEW: Check session on load and update URL if logged in ---
+  useEffect(() => {
+    fetch("/api/auth/session")
+      .then((res) => res.json())
+      .then((session) => {
+        // If a user exists in the session, redirect them to the dashboard instead
+        if (session?.user) {
+          setTargetUrl("/dashboard");
+        }
+      })
+      .catch((err) => console.error("Session check failed", err));
+  }, []);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -178,11 +194,14 @@ export default function Home() {
           </p>
 
           <div className="animate-fade-in-up delay-300 mt-8 flex flex-row items-center justify-center gap-4 lg:justify-start">
-            <Link href="/sign-in">
-              <Button className="h-11 rounded-full bg-[var(--secondary)] px-8 text-base font-medium text-[var(--text-primary)] shadow-md shadow-black/30 transition-colors hover:bg-[var(--secondary-hover)]">
+            
+            {/* --- UPDATED: Uses targetUrl state for the redirect --- */}
+            <Link href={targetUrl}>
+              <Button className="h-11 rounded-full bg-[var(--secondary)] px-8 text-base font-medium text-[var(--text-primary)] shadow-md shadow-black/30 transition-colors hover:bg-[var(--secondary-hover)] cursor-pointer">
                 Get started
               </Button>
             </Link>
+
           </div>
         </div>
 
