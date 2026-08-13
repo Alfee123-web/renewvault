@@ -5,6 +5,10 @@ function formatAmount(amount: number, currency: string) {
   return `${symbol}${amount.toFixed(2)}`;
 }
 
+function normalizeBaseUrl(url: string) {
+  return url.endsWith("/") ? url.slice(0, -1) : url;
+}
+
 export function generateReminderEmailHtml(
   userName: string,
   renewalName: string,
@@ -23,7 +27,11 @@ export function generateReminderEmailHtml(
   const formattedAmount = formatAmount(amount, currency);
   const timeText = daysBefore === 1 ? "tomorrow" : `in ${daysBefore} days`;
   const currentYear = new Date().getFullYear();
-  const dashboardUrl = "http://localhost:3000/dashboard"; // Change to your production URL later
+  
+  const appUrl = normalizeBaseUrl(
+    process.env.NEXT_PUBLIC_APP_URL || "https://renewvault.me"
+  );
+  const dashboardUrl = `${appUrl}/dashboard`;
 
   return `
     <!DOCTYPE html>
@@ -40,7 +48,7 @@ export function generateReminderEmailHtml(
         <div style="margin:0 auto;max-width:640px;padding:40px 20px;">
           <div style="border:1px solid #222235;background:#11111a;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.35);">
             
-            <!-- Header Section -->
+            <!-- Header Section (Matching Password Reset Design) -->
             <div style="padding:32px 32px 20px 32px;border-bottom:1px solid #1f1f2b;text-align:center;">
               <img
                 src="cid:renewvault-logo"
