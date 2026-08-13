@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { updateProfileName } from "@/app/actions/profile";
+import { updateProfileName, uploadAvatar } from "@/app/actions/profile";
 
 // Icons
 const UserIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>;
@@ -20,6 +20,8 @@ interface ProfileFormProps {
 export default function ProfileForm({ user }: ProfileFormProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState(user.image || "");
 
   const initials = (user.name || "Vault User")
     .split(" ")
@@ -35,6 +37,26 @@ export default function ProfileForm({ user }: ProfileFormProps) {
     setIsSaving(false);
   }
 
+  // NEW: Handle real avatar upload to Vercel Blob
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const newUrl = await uploadAvatar(formData);
+      setAvatarUrl(newUrl); // Instantly show new avatar
+    } catch (error) {
+      console.error("Upload error:", error);
+      alert("Failed to upload image. Ensure Vercel Blob is configured.");
+    } finally {
+      setIsUploading(false);
+    }
+  }
+
   return (
     <section className="overflow-hidden rounded-2xl border border-zinc-800/80 bg-[#121214]/90 shadow-sm backdrop-blur-md">
       <div className="flex items-center justify-between border-b border-zinc-800/50 bg-zinc-900/50 px-6 py-4">
@@ -42,7 +64,7 @@ export default function ProfileForm({ user }: ProfileFormProps) {
         {!isEditing && (
           <button
             onClick={() => setIsEditing(true)}
-            className="text-xs font-medium text-emerald-400 hover:text-emerald-300 transition-colors"
+            className="text-xs font-medium text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer"
           >
             Edit Profile
           </button>
@@ -55,9 +77,9 @@ export default function ProfileForm({ user }: ProfileFormProps) {
           {/* Avatar Area */}
           <div className="relative group">
             <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#4338ca] to-[#3730a3] text-2xl font-bold text-white shadow-lg border-2 border-zinc-800 overflow-hidden">
-              {user.image ? (
+              {avatarUrl ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
-                <img src={user.image} alt={user.name || "User"} className="h-full w-full object-cover" />
+                <img src={avatarUrl} alt={user.name || "User"} className="h-full w-full object-cover" />
               ) : (
                 initials
               )}
@@ -66,12 +88,13 @@ export default function ProfileForm({ user }: ProfileFormProps) {
             {/* Avatar Edit Overlay */}
             {isEditing && (
               <label className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
-                <CameraIcon />
+                {isUploading ? <span className="text-[10px] text-white">...</span> : <CameraIcon />}
                 <input 
                   type="file" 
                   accept="image/*" 
                   className="hidden" 
-                  onChange={(e) => alert("Image upload requires a storage bucket (like Vercel Blob). Coming in a future update!")}
+                  onChange={handleFileChange}
+                  disabled={isUploading}
                 />
               </label>
             )}
@@ -114,18 +137,18 @@ export default function ProfileForm({ user }: ProfileFormProps) {
 
         {/* Action Buttons (Only visible when editing) */}
         {isEditing && (
-          <div className="mt-6 flex items-center justify-end gap-3 border-t border-zinc-800/50 pt-4">
+          <div className="mt-6 flex items-center justify-end gap-3 border-t border-zinc-800/50 pt-4 animate-fade-in-up">
             <button
               type="button"
               onClick={() => setIsEditing(false)}
-              className="rounded-lg px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white transition-colors"
+              className="rounded-lg px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-4 py-2 text-sm font-medium text-emerald-400 transition-colors hover:bg-emerald-500/20 disabled:opacity-50"
+              className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-4 py-2 text-sm font-medium text-emerald-400 transition-colors hover:bg-emerald-500/20 disabled:opacity-50 cursor-pointer"
             >
               {isSaving ? "Saving..." : "Save Changes"}
             </button>
