@@ -176,8 +176,6 @@ git checkout -b feature/your-feature-name
 
 ## Roadmap
 
-- [ ] Replace mock data with live API integration
-- [ ] Finalize reminder notification delivery (email/in-app)
 - [ ] Additional dashboard features (see project mind map)
 
 ## Contributors
