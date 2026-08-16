@@ -4,6 +4,8 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { Renewal } from "@/lib/types";
 import RenewalCard from "@/app/components/dashboard/RenewalCard";
 import AddRenewalModal from "@/app/components/dashboard/AddRenewalModal";
+import SpendingSummary from "@/app/components/dashboard/SpendingSummary";
+import CalendarView from "@/app/components/dashboard/CalendarView";
 import {
   getRenewals,
   createRenewal,
@@ -11,15 +13,6 @@ import {
   deleteRenewal,
   markRenewalAsRenewed,
 } from "@/app/actions/renewals";
-
-const FILTER_OPTIONS = [
-  { label: "All", value: "all" },
-  { label: "Upcoming", value: "upcoming" },
-  { label: "Due Soon", value: "due-soon" },
-  { label: "Overdue", value: "overdue" },
-  { label: "Renewed", value: "renewed" },
-  { label: "Cancelled", value: "cancelled" },
-];
 
 const SORT_OPTIONS = [
   { label: "Due date (soonest)", value: "date-asc" },
@@ -29,24 +22,24 @@ const SORT_OPTIONS = [
 ];
 
 // --- ICONS ---
-function ClockIcon() { return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>; }
-function AlertIcon() { return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>; }
-function BellIcon() { return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>; }
 function SearchIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>; }
 function CloseSmallIcon() { return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>; }
 function ArrowUpDownIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21 16-4 4-4-4" /><path d="M17 20V4" /><path d="m3 8 4-4 4 4" /><path d="M7 4v16" /></svg>; }
 function SpinnerIcon() { return <svg className="animate-spin h-6 w-6 text-[#4338ca]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>; }
+function GridIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>; }
+function CalendarToggleIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>; }
 
 export default function Dashboard() {
   const [renewals, setRenewals] = useState<Renewal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeFilter, setActiveFilter] = useState("all");
+  const [activeFilter, setActiveFilter] = useState("All");
   const [sortBy, setSortBy] = useState("date-asc");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRenewal, setEditingRenewal] = useState<Renewal | null>(null);
   const [isSortOpen, setIsSortOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "calendar">("grid");
   const sortRef = useRef<HTMLDivElement>(null);
 
   async function loadData() {
@@ -62,7 +55,6 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
     
     function handleClickOutside(e: MouseEvent) {
@@ -76,18 +68,17 @@ export default function Dashboard() {
 
   const activeSortLabel = SORT_OPTIONS.find((opt) => opt.value === sortBy)?.label;
 
-  const stats = useMemo(() => ({
-    upcoming: renewals.filter((r) => r.status === "upcoming").length,
-    dueThisWeek: renewals.filter((r) => r.status === "due-soon").length,
-    savedReminders: renewals.filter((r) => r.reminderEnabled).length,
-  }), [renewals]);
+  const dynamicCategories = useMemo(() => {
+    const uniqueCats = new Set(renewals.map((r) => r.category).filter(Boolean));
+    return ["All", ...Array.from(uniqueCats)].sort();
+  }, [renewals]);
 
   const filteredRenewals = useMemo(() => {
     const filtered = renewals.filter((renewal) => {
       const matchesSearch =
         renewal.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         renewal.category.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesFilter = activeFilter === "all" || renewal.status === activeFilter;
+      const matchesFilter = activeFilter === "All" || renewal.category === activeFilter;
       return matchesSearch && matchesFilter;
     });
 
@@ -102,11 +93,8 @@ export default function Dashboard() {
     });
   }, [renewals, searchQuery, activeFilter, sortBy]);
 
-  // --- ASYNC DATABASE MUTATIONS ---
   const handleAddRenewal = async (newRenewal: Renewal) => {
     try {
-      // Exclude client-generated Math.random ID securely
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { id, ...dataToSave } = newRenewal;
       const saved = await createRenewal(dataToSave as Omit<Renewal, "id">);
       setRenewals((prev) => [...prev, saved]);
@@ -116,35 +104,32 @@ export default function Dashboard() {
   };
 
   const handleUpdateRenewal = async (updatedRenewal: Renewal) => {
-    // Optimistic UI update
     setRenewals((prev) => prev.map((r) => (r.id === updatedRenewal.id ? updatedRenewal : r)));
     try {
       await updateRenewal(updatedRenewal.id, updatedRenewal);
     } catch (error) {
       console.error("Failed to update, reverting...", error);
-      loadData(); // Revert on failure
+      loadData();
     }
   };
 
   const handleDeleteRenewal = async (id: string) => {
-    // Optimistic UI update
     setRenewals((prev) => prev.filter((r) => r.id !== id));
     try {
       await deleteRenewal(id);
     } catch (error) {
       console.error("Failed to delete, reverting...", error);
-      loadData(); // Revert on failure
+      loadData(); 
     }
   };
 
   const handleMarkRenewed = async (id: string) => {
-    // Optimistic UI update
     setRenewals((prev) => prev.map((r) => (r.id === id ? { ...r, status: "renewed" } : r)));
     try {
       await markRenewalAsRenewed(id);
     } catch (error) {
       console.error("Failed to mark renewed, reverting...", error);
-      loadData(); // Revert on failure
+      loadData();
     }
   };
 
@@ -152,12 +137,6 @@ export default function Dashboard() {
     setEditingRenewal(renewal);
     setIsModalOpen(true);
   };
-
-  const STAT_CARDS = [
-    { label: "Upcoming", value: stats.upcoming, icon: ClockIcon, color: "text-[var(--secondary-text)]" },
-    { label: "Due this week", value: stats.dueThisWeek, icon: AlertIcon, color: "text-amber-400" },
-    { label: "Saved reminders", value: stats.savedReminders, icon: BellIcon, color: "text-[var(--text-primary)]" },
-  ];
 
   return (
     <div className="relative min-h-screen bg-transparent px-4 py-10 sm:px-6 lg:px-8">
@@ -190,22 +169,8 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Stat Cards */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-8 animate-fade-in-up delay-100">
-          {STAT_CARDS.map(({ label, value, icon: Icon, color }) => (
-            <div key={label} className="rounded-2xl border border-zinc-800 bg-[#121214]/80 backdrop-blur-md p-5 shadow-sm hover:border-zinc-700 transition-colors">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-medium text-zinc-400 tracking-wider uppercase">{label}</p>
-                <span className={`flex h-8 w-8 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/80 ${color}`}>
-                  <Icon />
-                </span>
-              </div>
-              <p className={`text-3xl font-bold mt-3 ${color === "text-amber-400" ? color : "text-white"}`}>
-                {isLoading ? "-" : value}
-              </p>
-            </div>
-          ))}
-        </div>
+        {/* --- V2 SPENDING SUMMARY COMPONENT --- */}
+        <SpendingSummary renewals={renewals} isLoading={isLoading} />
 
         {/* --- COMMAND / FILTER BAR --- */}
         <div className="flex flex-col gap-4 mb-8 rounded-2xl border border-zinc-800 bg-[#121214]/90 backdrop-blur-md p-3.5 shadow-sm animate-fade-in-up delay-200 lg:flex-row lg:items-center lg:justify-between">
@@ -221,54 +186,76 @@ export default function Dashboard() {
               className="w-full rounded-xl border border-zinc-800 bg-zinc-900/60 pl-9 pr-8 py-2 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#4338ca] transition-colors"
             />
             {searchQuery && (
-              <button onClick={() => setSearchQuery("")} className="absolute inset-y-0 right-2.5 flex items-center text-zinc-400 hover:text-white">
+              <button onClick={() => setSearchQuery("")} className="absolute inset-y-0 right-2.5 flex items-center text-zinc-400 hover:text-white cursor-pointer">
                 <CloseSmallIcon />
               </button>
             )}
           </div>
 
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide lg:flex-wrap lg:overflow-visible lg:pb-0 lg:mx-0 lg:px-0">
-            {FILTER_OPTIONS.map((option) => (
+            {dynamicCategories.map((category) => (
               <button
-                key={option.value}
-                onClick={() => setActiveFilter(option.value)}
+                key={category}
+                onClick={() => setActiveFilter(category)}
                 className={`shrink-0 rounded-xl px-3.5 py-1.5 text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
-                  activeFilter === option.value ? "bg-[#4338ca] text-white shadow-sm" : "bg-zinc-900/40 text-zinc-400 border border-zinc-800/80 hover:text-white hover:border-zinc-700"
+                  activeFilter === category ? "bg-[#4338ca] text-white shadow-sm" : "bg-zinc-900/40 text-zinc-400 border border-zinc-800/80 hover:text-white hover:border-zinc-700"
                 }`}
               >
-                {option.label}
+                {category}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Section Status & Results Header */}
-        <div className="flex flex-col gap-3 mb-4 px-1 sm:flex-row sm:items-center sm:justify-between">
+        {/* Section Status & Results Header (Added relative z-30 here) */}
+        <div className="relative z-30 flex flex-col gap-3 mb-4 px-1 sm:flex-row sm:items-center sm:justify-between animate-fade-in-up delay-300">
           <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
             Showing {isLoading ? "..." : `${filteredRenewals.length} ${filteredRenewals.length === 1 ? 'renewal' : 'renewals'}`}
           </p>
-          <div className="relative self-start sm:self-auto" ref={sortRef}>
-            <button onClick={() => setIsSortOpen(!isSortOpen)} className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/60 pl-3 pr-3 py-1.5 text-xs font-medium text-zinc-300 hover:border-zinc-700 transition-colors cursor-pointer">
-              <ArrowUpDownIcon />
-              <span>{activeSortLabel}</span>
-            </button>
-            {isSortOpen && (
-              <div className="absolute right-0 z-20 mt-1.5 w-48 overflow-hidden rounded-xl border border-zinc-800 bg-[#121214] shadow-lg">
-                {SORT_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => { setSortBy(opt.value); setIsSortOpen(false); }}
-                    className={`block w-full px-3.5 py-2.5 text-left text-xs font-medium transition-colors cursor-pointer ${sortBy === opt.value ? "bg-[#4338ca] text-white" : "text-zinc-300 hover:bg-zinc-800/80"}`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            )}
+          
+          <div className="flex items-center gap-3 self-start sm:self-auto">
+            {/* View Mode Toggle */}
+            <div className="flex items-center rounded-lg border border-zinc-800 bg-zinc-900/60 p-0.5">
+              <button 
+                onClick={() => setViewMode("grid")}
+                className={`p-1.5 rounded-md transition-colors cursor-pointer ${viewMode === "grid" ? "bg-zinc-800 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-300"}`}
+                title="Grid view"
+              >
+                <GridIcon />
+              </button>
+              <button 
+                onClick={() => setViewMode("calendar")}
+                className={`p-1.5 rounded-md transition-colors cursor-pointer ${viewMode === "calendar" ? "bg-zinc-800 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-300"}`}
+                title="Calendar view"
+              >
+                <CalendarToggleIcon />
+              </button>
+            </div>
+
+            {/* Sort Dropdown */}
+            <div className="relative" ref={sortRef}>
+              <button onClick={() => setIsSortOpen(!isSortOpen)} className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/60 pl-3 pr-3 py-1.5 text-xs font-medium text-zinc-300 hover:border-zinc-700 transition-colors cursor-pointer">
+                <ArrowUpDownIcon />
+                <span>{activeSortLabel}</span>
+              </button>
+              {isSortOpen && (
+                <div className="absolute right-0 z-50 mt-1.5 w-48 overflow-hidden rounded-xl border border-zinc-800 bg-[#121214] shadow-xl">
+                  {SORT_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => { setSortBy(opt.value); setIsSortOpen(false); }}
+                      className={`block w-full px-3.5 py-2.5 text-left text-xs font-medium transition-colors cursor-pointer ${sortBy === opt.value ? "bg-[#4338ca] text-white" : "text-zinc-300 hover:bg-zinc-800/80"}`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Card Grid / Loading State / Empty State */}
+        {/* Card Grid / Calendar View / Loading State / Empty State */}
         <div className="animate-fade-in-up delay-300">
           {isLoading ? (
             <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 backdrop-blur-md py-24 flex flex-col items-center justify-center">
@@ -280,6 +267,8 @@ export default function Dashboard() {
               <p className="text-zinc-300 font-medium text-sm">No renewals found</p>
               <p className="text-zinc-500 text-xs mt-1">Try adjusting your search terms or filter selection.</p>
             </div>
+          ) : viewMode === "calendar" ? (
+            <CalendarView renewals={filteredRenewals} onEdit={openEditModal} />
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {filteredRenewals.map((renewal) => (

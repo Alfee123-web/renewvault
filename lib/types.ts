@@ -10,9 +10,11 @@ export interface Renewal {
   dueDate: string; // ISO date string, e.g. "2026-08-02"
   amount: number;
   currency: string;
+  billingCycle?: string; // <-- Just add this line
   status: "upcoming" | "due-soon" | "overdue" | "renewed" | "cancelled";
   reminderEnabled: boolean;
   reminderDaysBefore: number | null;
+  websiteDomain?: string | null;
 }
 
 export interface DashboardStats {
