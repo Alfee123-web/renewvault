@@ -5,19 +5,19 @@ import { auth } from "@/auth";
 import { Renewal as UIRenewal } from "@/lib/types";
 import { Renewal as DatabaseRenewal } from "@prisma/client";
 
-// Helper to map Prisma's DateTime back to the UI's string requirement
 function mapRenewalFromDB(prismaRenewal: DatabaseRenewal): UIRenewal {
   return {
     id: prismaRenewal.id,
     name: prismaRenewal.name,
     category: prismaRenewal.category,
-    // Convert DateTime to YYYY-MM-DD
     dueDate: prismaRenewal.dueDate.toISOString().split("T")[0],
     amount: prismaRenewal.amount,
     currency: prismaRenewal.currency,
+    billingCycle: prismaRenewal.billingCycle,
     status: prismaRenewal.status as UIRenewal["status"],
     reminderEnabled: prismaRenewal.reminderEnabled,
     reminderDaysBefore: prismaRenewal.reminderDaysBefore,
+    websiteDomain: prismaRenewal.websiteDomain, // <-- NEW
   };
 }
 
@@ -44,9 +44,11 @@ export async function createRenewal(data: Omit<UIRenewal, "id">): Promise<UIRene
       dueDate: new Date(data.dueDate),
       amount: data.amount,
       currency: data.currency,
+      billingCycle: data.billingCycle || "monthly",
       status: data.status,
       reminderEnabled: data.reminderEnabled,
       reminderDaysBefore: data.reminderDaysBefore,
+      websiteDomain: data.websiteDomain || null, // <-- NEW
       userId: session.user.id,
     },
   });
@@ -58,7 +60,6 @@ export async function updateRenewal(id: string, data: UIRenewal): Promise<UIRene
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
-  // Verify ownership before update
   const existing = await prisma.renewal.findUnique({ where: { id } });
   if (!existing || existing.userId !== session.user.id) {
     throw new Error("Unauthorized or not found");
@@ -72,9 +73,11 @@ export async function updateRenewal(id: string, data: UIRenewal): Promise<UIRene
       dueDate: new Date(data.dueDate),
       amount: data.amount,
       currency: data.currency,
+      billingCycle: data.billingCycle,
       status: data.status,
       reminderEnabled: data.reminderEnabled,
       reminderDaysBefore: data.reminderDaysBefore,
+      websiteDomain: data.websiteDomain || null, // <-- NEW
     },
   });
 
@@ -85,7 +88,6 @@ export async function deleteRenewal(id: string): Promise<void> {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
-  // Verify ownership before delete
   const existing = await prisma.renewal.findUnique({ where: { id } });
   if (!existing || existing.userId !== session.user.id) {
     throw new Error("Unauthorized or not found");
@@ -98,7 +100,6 @@ export async function markRenewalAsRenewed(id: string): Promise<void> {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
-  // Verify ownership before update
   const existing = await prisma.renewal.findUnique({ where: { id } });
   if (!existing || existing.userId !== session.user.id) {
     throw new Error("Unauthorized or not found");

@@ -73,6 +73,7 @@ model Renewal {
   dueDate            DateTime
   amount             Float
   currency           String   @default("USD")
+  billingCycle       String   @default("monthly") // <-- NEW FIELD FOR V2
   status             String   @default("upcoming")
   reminderEnabled    Boolean  @default(false)
   reminderDaysBefore Int?
