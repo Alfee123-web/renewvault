@@ -86,9 +86,9 @@ export default async function RenewalsPage() {
 
                     <div className="flex items-center justify-between">
                       <span className="text-zinc-500">Reminder</span>
-                      {renewal.reminderEnabled ? (
+                      {renewal.reminderEnabled && renewal.reminderDaysBefore && renewal.reminderDaysBefore.length > 0 ? (
                         <span className="inline-flex items-center rounded-md bg-[#4338ca]/10 px-2 py-1 text-[11px] font-semibold text-[#5b5fd8] border border-[#4338ca]/20">
-                          {renewal.reminderDaysBefore} {renewal.reminderDaysBefore === 1 ? 'day' : 'days'} before
+                          {renewal.reminderDaysBefore.join(', ')} {renewal.reminderDaysBefore.length === 1 && renewal.reminderDaysBefore[0] === 1 ? 'day' : 'days'} before
                         </span>
                       ) : (
                         <span className="text-zinc-600">-</span>
@@ -131,9 +131,9 @@ export default async function RenewalsPage() {
                           <StatusBadge status={renewal.status} />
                         </td>
                         <td className="px-6 py-4 text-center">
-                          {renewal.reminderEnabled ? (
+                          {renewal.reminderEnabled && renewal.reminderDaysBefore && renewal.reminderDaysBefore.length > 0 ? (
                             <span className="inline-flex items-center rounded-md bg-[#4338ca]/10 px-2 py-1.5 text-[11px] font-semibold text-[#5b5fd8] border border-[#4338ca]/20">
-                              {renewal.reminderDaysBefore} {renewal.reminderDaysBefore === 1 ? 'day' : 'days'} before
+                              {renewal.reminderDaysBefore.join(', ')} {renewal.reminderDaysBefore.length === 1 && renewal.reminderDaysBefore[0] === 1 ? 'day' : 'days'} before
                             </span>
                           ) : (
                             <span className="text-zinc-600">-</span>

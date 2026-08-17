@@ -6,6 +6,7 @@ import RenewalCard from "@/app/components/dashboard/RenewalCard";
 import AddRenewalModal from "@/app/components/dashboard/AddRenewalModal";
 import SpendingSummary from "@/app/components/dashboard/SpendingSummary";
 import CalendarView from "@/app/components/dashboard/CalendarView";
+import NotificationBell from "@/app/components/dashboard/NotificationBell";
 import {
   getRenewals,
   createRenewal,
@@ -153,27 +154,33 @@ export default function Dashboard() {
       </div>
 
       <div className="relative z-10 mx-auto max-w-6xl">
-        {/* Header */}
-        <div className="flex flex-col gap-4 mb-8 pt-14 lg:pt-0 sm:flex-row sm:items-center sm:justify-between animate-fade-in-up">
+        
+        {/* Header - Added relative z-50 to ensure bell dropdown renders over everything */}
+        <div className="relative z-50 flex flex-col gap-4 mb-8 pt-14 lg:pt-0 sm:flex-row sm:items-center sm:justify-between animate-fade-in-up">
           <div>
             <h1 className="text-3xl font-bold text-white tracking-tight">Welcome back</h1>
             <p className="hidden sm:block text-sm text-zinc-400 mt-1">
               Manage and track your upcoming digital and financial renewals.
             </p>
           </div>
-          <button
-            onClick={() => { setEditingRenewal(null); setIsModalOpen(true); }}
-            className="self-start rounded-xl bg-[#4338ca] px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-[#3730a3] hover:-translate-y-0.5 transition-all cursor-pointer sm:self-auto"
-          >
-            + Add renewal
-          </button>
+          <div className="flex items-center gap-4 self-start sm:self-auto">
+            <NotificationBell />
+            <button
+              onClick={() => { setEditingRenewal(null); setIsModalOpen(true); }}
+              className="rounded-xl bg-[#4338ca] px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-[#3730a3] hover:-translate-y-0.5 transition-all cursor-pointer"
+            >
+              + Add renewal
+            </button>
+          </div>
         </div>
 
         {/* --- V2 SPENDING SUMMARY COMPONENT --- */}
+        {/* z-index is naturally handled by DOM order, sits below z-50 header */}
         <SpendingSummary renewals={renewals} isLoading={isLoading} />
 
         {/* --- COMMAND / FILTER BAR --- */}
-        <div className="flex flex-col gap-4 mb-8 rounded-2xl border border-zinc-800 bg-[#121214]/90 backdrop-blur-md p-3.5 shadow-sm animate-fade-in-up delay-200 lg:flex-row lg:items-center lg:justify-between">
+        {/* Added relative z-40 so it doesn't overlap the header, but stays above the cards */}
+        <div className="relative z-40 flex flex-col gap-4 mb-8 rounded-2xl border border-zinc-800 bg-[#121214]/90 backdrop-blur-md p-3.5 shadow-sm animate-fade-in-up delay-200 lg:flex-row lg:items-center lg:justify-between">
           <div className="relative w-full lg:w-72">
             <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
               <SearchIcon />
@@ -207,7 +214,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Section Status & Results Header (Added relative z-30 here) */}
+        {/* Section Status & Results Header - Maintains z-30 for the Sort dropdown */}
         <div className="relative z-30 flex flex-col gap-3 mb-4 px-1 sm:flex-row sm:items-center sm:justify-between animate-fade-in-up delay-300">
           <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
             Showing {isLoading ? "..." : `${filteredRenewals.length} ${filteredRenewals.length === 1 ? 'renewal' : 'renewals'}`}
@@ -256,7 +263,7 @@ export default function Dashboard() {
         </div>
 
         {/* Card Grid / Calendar View / Loading State / Empty State */}
-        <div className="animate-fade-in-up delay-300">
+        <div className="relative z-10 animate-fade-in-up delay-300">
           {isLoading ? (
             <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 backdrop-blur-md py-24 flex flex-col items-center justify-center">
                <SpinnerIcon />

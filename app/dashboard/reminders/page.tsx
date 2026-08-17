@@ -41,26 +41,34 @@ function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-// Calculates the exact date the reminder should trigger
-function getAlertDate(dueDate: string, daysBefore: number | null) {
-  if (!daysBefore) return formatDate(dueDate);
-  const date = new Date(dueDate);
-  date.setDate(date.getDate() - daysBefore);
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+// Calculates the exact dates the reminder should trigger (Handles arrays!)
+function getAlertDate(dueDate: string, daysBefore: number[] | any) {
+  if (!daysBefore || !Array.isArray(daysBefore) || daysBefore.length === 0) return formatDate(dueDate);
+  
+  // Sort descending (e.g. 30, 7, 1) so the earliest calendar date appears first in the UI list
+  const sortedDays = [...daysBefore].sort((a, b) => b - a);
+  
+  return sortedDays.map(days => {
+    const date = new Date(dueDate);
+    date.setDate(date.getDate() - days);
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  }).join(", ");
 }
 
 export default async function RemindersPage() {
   const allRenewals = await getRenewals();
   
-  // Filter for ONLY renewals that have reminders enabled, and sort by the Alert Date
+  // Filter for ONLY renewals that have reminders enabled, and sort by the Earliest Alert Date
   const reminders = allRenewals
-    .filter((r) => r.reminderEnabled)
+    .filter((r) => r.reminderEnabled && Array.isArray(r.reminderDaysBefore) && r.reminderDaysBefore.length > 0)
     .sort((a, b) => {
+      const aMaxDays = Math.max(...(a.reminderDaysBefore || [0]));
       const dateA = new Date(a.dueDate);
-      if (a.reminderDaysBefore) dateA.setDate(dateA.getDate() - a.reminderDaysBefore);
+      dateA.setDate(dateA.getDate() - aMaxDays);
       
+      const bMaxDays = Math.max(...(b.reminderDaysBefore || [0]));
       const dateB = new Date(b.dueDate);
-      if (b.reminderDaysBefore) dateB.setDate(dateB.getDate() - b.reminderDaysBefore);
+      dateB.setDate(dateB.getDate() - bMaxDays);
       
       return dateA.getTime() - dateB.getTime();
     });
@@ -99,11 +107,14 @@ export default async function RemindersPage() {
 
                   {/* Card Body */}
                   <div className="mt-4 flex flex-col gap-3 text-sm">
-                    {/* Highlighted Alert Date */}
-                    <div className="flex items-center justify-between rounded-lg bg-amber-500/5 border border-amber-500/10 p-2.5">
-                      <span className="text-amber-500/80 font-medium">Alert Date</span>
-                      <div className="flex items-center gap-1.5 font-semibold text-amber-500">
+                    
+                    {/* Highlighted Alert Dates (Stacked Vertically for Readability) */}
+                    <div className="flex flex-col gap-1.5 rounded-lg bg-amber-500/5 border border-amber-500/15 p-3">
+                      <div className="flex items-center gap-1.5 text-amber-500 font-medium text-xs">
                         <AlertIcon />
+                        <span>Alert Dates</span>
+                      </div>
+                      <div className="font-semibold text-amber-500 text-sm pl-5 leading-relaxed">
                         {getAlertDate(renewal.dueDate, renewal.reminderDaysBefore)}
                       </div>
                     </div>
@@ -133,7 +144,7 @@ export default async function RemindersPage() {
                     <tr>
                       <th className="px-6 py-4">Name</th>
                       <th className="px-6 py-4">Category</th>
-                      <th className="px-6 py-4 text-amber-500/90">Alert Date</th>
+                      <th className="px-6 py-4 text-amber-500/90">Alert Dates</th>
                       <th className="px-6 py-4">Renewal Date</th>
                       <th className="px-6 py-4">Amount</th>
                       <th className="px-6 py-4">Status</th>
@@ -145,7 +156,7 @@ export default async function RemindersPage() {
                         <td className="px-6 py-4 font-medium text-white">{renewal.name}</td>
                         <td className="px-6 py-4 text-zinc-400">{renewal.category}</td>
                         
-                        {/* Highlighted Alert Date */}
+                        {/* Highlighted Alert Dates */}
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2 font-medium text-amber-500">
                             <AlertIcon />
