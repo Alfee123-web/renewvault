@@ -12,7 +12,7 @@ export const mockRenewals: Renewal[] = [
     currency: "USD",
     status: "due-soon",
     reminderEnabled: true,
-    reminderDaysBefore: 3,
+    reminderDaysBefore: [3],
   },
   {
     id: "2",
@@ -23,7 +23,7 @@ export const mockRenewals: Renewal[] = [
     currency: "USD",
     status: "upcoming",
     reminderEnabled: true,
-    reminderDaysBefore: 7,
+    reminderDaysBefore: [7],
   },
   {
     id: "3",
@@ -34,7 +34,7 @@ export const mockRenewals: Renewal[] = [
     currency: "USD",
     status: "upcoming",
     reminderEnabled: false,
-    reminderDaysBefore: 3,
+    reminderDaysBefore: [3],
   },
   {
     id: "4",
@@ -45,7 +45,7 @@ export const mockRenewals: Renewal[] = [
     currency: "USD",
     status: "overdue",
     reminderEnabled: true,
-    reminderDaysBefore: 14,
+    reminderDaysBefore: [14],
   },
 ];
 
