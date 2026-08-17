@@ -32,6 +32,8 @@ function TagIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill
 function CalendarMinimalIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>; }
 function ChevronLeftIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>; }
 function ChevronRightIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>; }
+function ChevronUpSmallIcon() { return <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>; }
+function ChevronDownSmallIcon() { return <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>; }
 
 export default function AddRenewalModal({
   onClose,
@@ -46,7 +48,7 @@ export default function AddRenewalModal({
     amount: "",
     currency: "USD",
     billingCycle: "monthly",
-    reminderSetting: "none",
+    reminderDaysBefore: [] as number[],
     websiteDomain: "",
   });
 
@@ -55,7 +57,6 @@ export default function AddRenewalModal({
   const [isServiceOpen, setIsServiceOpen] = useState(false);
   const [isCustom, setIsCustom] = useState(false);
   const [isCurrencyOpen, setIsCurrencyOpen] = useState(false);
-  const [isReminderOpen, setIsReminderOpen] = useState(false);
   const [isBillingOpen, setIsBillingOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
@@ -66,12 +67,6 @@ export default function AddRenewalModal({
   const billingCycles = [
     { value: "monthly", label: "Monthly" },
     { value: "yearly", label: "Yearly" },
-  ];
-  const reminders = [
-    { value: "none", label: "No reminder" },
-    { value: "1", label: "1 day before" },
-    { value: "7", label: "7 days before" },
-    { value: "30", label: "30 days before" },
   ];
 
   useEffect(() => {
@@ -86,9 +81,7 @@ export default function AddRenewalModal({
         amount: editingRenewal.amount.toString(),
         currency: editingRenewal.currency,
         billingCycle: editingRenewal.billingCycle || "monthly",
-        reminderSetting: editingRenewal.reminderEnabled
-          ? editingRenewal.reminderDaysBefore?.toString() || "none"
-          : "none",
+        reminderDaysBefore: editingRenewal.reminderDaysBefore || [],
         websiteDomain: editingRenewal.websiteDomain || "",
       });
 
@@ -124,14 +117,24 @@ export default function AddRenewalModal({
       billingCycle: formData.billingCycle,
       websiteDomain: formData.websiteDomain,
       status: "upcoming", 
-      reminderEnabled: formData.reminderSetting !== "none",
-      reminderDaysBefore: formData.reminderSetting !== "none" ? parseInt(formData.reminderSetting) : null,
+      reminderEnabled: formData.reminderDaysBefore.length > 0,
+      reminderDaysBefore: formData.reminderDaysBefore,
     };
 
     if (editingRenewal) onUpdate(newRenewal);
     else onAdd(newRenewal);
     
     onClose();
+  };
+
+  const handleAmountStep = (delta: number) => {
+    const current = parseFloat(formData.amount) || 0;
+    const next = Math.max(0, current + delta);
+    setFormData({ 
+      ...formData, 
+      amount: next > 0 ? next.toFixed(2).replace(/\.00$/, '') : "" 
+    });
+    if (errors.amount) setErrors({ ...errors, amount: "" });
   };
 
   // Calendar Math Helpers
@@ -291,14 +294,14 @@ export default function AddRenewalModal({
                       <button
                         type="button"
                         onClick={() => setCalDate(new Date(year, month - 1, 1))}
-                        className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors"
+                        className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
                       >
                         <ChevronLeftIcon />
                       </button>
                       <button
                         type="button"
                         onClick={() => setCalDate(new Date(year, month + 1, 1))}
-                        className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors"
+                        className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
                       >
                         <ChevronRightIcon />
                       </button>
@@ -345,22 +348,43 @@ export default function AddRenewalModal({
             )}
           </div>
 
-          {/* --- AMOUNT & CURRENCY --- */}
+          {/* --- AMOUNT & CURRENCY (Custom Arrows Added) --- */}
           <div className="relative z-20">
             <div className="flex gap-3">
-              <input
-                type="number"
-                step="0.01"
-                value={formData.amount}
-                onChange={(e) => {
-                  setFormData({ ...formData, amount: e.target.value });
-                  if (errors.amount) setErrors({ ...errors, amount: "" });
-                }}
-                placeholder="Amount"
-                className={`flex-1 rounded-xl border bg-transparent px-4 py-3.5 text-sm text-white placeholder:text-[#888] focus:outline-none transition-colors ${
-                  errors.amount ? "border-red-500/80 focus:border-red-500" : "border-[var(--border)] focus:border-[#5b5fd8]"
-                }`}
-              />
+              <div className="relative flex-1">
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.amount}
+                  onChange={(e) => {
+                    setFormData({ ...formData, amount: e.target.value });
+                    if (errors.amount) setErrors({ ...errors, amount: "" });
+                  }}
+                  placeholder="Amount"
+                  // appearance-none and webkit pseudo-class removal fixes the white box
+                  className={`w-full h-full rounded-xl border bg-transparent pl-4 pr-10 py-3.5 text-sm text-white placeholder:text-[#888] focus:outline-none transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                    errors.amount ? "border-red-500/80 focus:border-red-500" : "border-[var(--border)] focus:border-[#5b5fd8]"
+                  }`}
+                />
+                
+                {/* Custom Stacked Arrows */}
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-1">
+                  <button
+                    type="button"
+                    onClick={() => handleAmountStep(1)}
+                    className="text-zinc-600 hover:text-zinc-300 transition-colors cursor-pointer p-0.5"
+                  >
+                    <ChevronUpSmallIcon />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAmountStep(-1)}
+                    className="text-zinc-600 hover:text-zinc-300 transition-colors cursor-pointer p-0.5"
+                  >
+                    <ChevronDownSmallIcon />
+                  </button>
+                </div>
+              </div>
               
               <div className="relative w-[100px]">
                 <div
@@ -446,46 +470,39 @@ export default function AddRenewalModal({
               </div>
             </div>
 
-            {/* Reminder */}
+            {/* Reminder Checklist (New Multi-Select UI) */}
             <div className="space-y-2">
               <label className="text-[11px] font-bold text-[#888] tracking-widest uppercase">
-                Reminder Setting
+                Reminder Settings
               </label>
-              <div className="relative">
-                <div
-                  onClick={() => setIsReminderOpen(!isReminderOpen)}
-                  className={`w-full rounded-xl border bg-[#121212] px-4 py-3.5 text-sm text-white cursor-pointer flex justify-between items-center transition-colors ${
-                    isReminderOpen ? "border-[#5b5fd8]" : "border-[var(--border)] hover:border-[#5b5fd8]/50"
-                  }`}
-                >
-                  {reminders.find(r => r.value === formData.reminderSetting)?.label}
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#888]">
-                    <path d="m6 9 6 6 6-6"/>
-                  </svg>
-                </div>
-
-                {isReminderOpen && (
-                  <>
-                    <div className="fixed inset-0 z-10" onClick={() => setIsReminderOpen(false)} />
-                    <div className="absolute z-20 w-full mt-1 rounded-xl border border-[var(--border)] bg-[#121212] shadow-xl overflow-hidden py-1 animate-fade-in-up">
-                      {reminders.map((reminder) => (
-                        <div
-                          key={reminder.value}
-                          onClick={() => {
-                            setFormData({ ...formData, reminderSetting: reminder.value });
-                            setIsReminderOpen(false);
-                          }}
-                          className="px-4 py-3 text-sm cursor-pointer text-white hover:bg-[#5b5fd8] transition-colors flex justify-between items-center"
-                        >
-                          {reminder.label}
-                          {formData.reminderSetting === reminder.value && (
-                            <span className="text-xs text-white/50">✓</span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
+              <div className="grid grid-cols-1 gap-2 pt-1">
+                {[1, 7, 30].map((days) => {
+                  const isSelected = formData.reminderDaysBefore.includes(days);
+                  return (
+                    <button
+                      key={days}
+                      type="button"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          reminderDaysBefore: isSelected
+                            ? formData.reminderDaysBefore.filter((d) => d !== days)
+                            : [...formData.reminderDaysBefore, days].sort((a, b) => a - b),
+                        });
+                      }}
+                      className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-all cursor-pointer ${
+                        isSelected 
+                          ? "border-[#5b5fd8] bg-[#5b5fd8]/10 text-white" 
+                          : "border-[var(--border)] bg-[#121212] text-zinc-400 hover:border-zinc-700 hover:text-zinc-300"
+                      }`}
+                    >
+                      <div className={`w-4 h-4 rounded-[4px] border flex items-center justify-center transition-colors ${isSelected ? "bg-[#5b5fd8] border-[#5b5fd8]" : "border-zinc-600"}`}>
+                        {isSelected && <span className="text-[10px] text-white font-bold leading-none">✓</span>}
+                      </div>
+                      <span className="text-xs font-medium">{days} {days === 1 ? 'day' : 'days'} before</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>

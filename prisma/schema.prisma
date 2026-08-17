@@ -76,7 +76,7 @@ model Renewal {
   billingCycle       String   @default("monthly") // <-- NEW FIELD FOR V2
   status             String   @default("upcoming")
   reminderEnabled    Boolean  @default(false)
-  reminderDaysBefore Int?
+  reminderDaysBefore String?
 
   // V2 Future-proofing
   websiteDomain String?

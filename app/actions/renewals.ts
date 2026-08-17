@@ -13,11 +13,16 @@ function mapRenewalFromDB(prismaRenewal: DatabaseRenewal): UIRenewal {
     dueDate: prismaRenewal.dueDate.toISOString().split("T")[0],
     amount: prismaRenewal.amount,
     currency: prismaRenewal.currency,
-    billingCycle: prismaRenewal.billingCycle,
+    billingCycle: prismaRenewal.billingCycle || "monthly",
     status: prismaRenewal.status as UIRenewal["status"],
     reminderEnabled: prismaRenewal.reminderEnabled,
-    reminderDaysBefore: prismaRenewal.reminderDaysBefore,
-    websiteDomain: prismaRenewal.websiteDomain, // <-- NEW
+    
+    // Safely bypass TS cache and parse string back to number array
+    reminderDaysBefore: (prismaRenewal.reminderDaysBefore as any)
+      ? String(prismaRenewal.reminderDaysBefore).split(',').map(Number).filter(n => !isNaN(n))
+      : [], 
+      
+    websiteDomain: prismaRenewal.websiteDomain,
   };
 }
 
@@ -46,9 +51,14 @@ export async function createRenewal(data: Omit<UIRenewal, "id">): Promise<UIRene
       currency: data.currency,
       billingCycle: data.billingCycle || "monthly",
       status: data.status,
-      reminderEnabled: data.reminderEnabled,
-      reminderDaysBefore: data.reminderDaysBefore,
-      websiteDomain: data.websiteDomain || null, // <-- NEW
+      reminderEnabled: data.reminderDaysBefore.length > 0,
+      
+      // Bypass TS cache and convert array [1,7] to string "1,7"
+      reminderDaysBefore: (data.reminderDaysBefore.length > 0 
+        ? data.reminderDaysBefore.join(',') 
+        : null) as any, 
+        
+      websiteDomain: data.websiteDomain || null,
       userId: session.user.id,
     },
   });
@@ -75,9 +85,14 @@ export async function updateRenewal(id: string, data: UIRenewal): Promise<UIRene
       currency: data.currency,
       billingCycle: data.billingCycle,
       status: data.status,
-      reminderEnabled: data.reminderEnabled,
-      reminderDaysBefore: data.reminderDaysBefore,
-      websiteDomain: data.websiteDomain || null, // <-- NEW
+      reminderEnabled: data.reminderDaysBefore.length > 0,
+      
+      // Bypass TS cache and convert array [1,7] to string "1,7"
+      reminderDaysBefore: (data.reminderDaysBefore.length > 0 
+        ? data.reminderDaysBefore.join(',') 
+        : null) as any,
+        
+      websiteDomain: data.websiteDomain || null,
     },
   });
 

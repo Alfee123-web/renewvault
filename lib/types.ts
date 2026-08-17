@@ -7,13 +7,13 @@ export interface Renewal {
   id: string;
   name: string;
   category: string;
-  dueDate: string; // ISO date string, e.g. "2026-08-02"
+  dueDate: string; 
   amount: number;
   currency: string;
-  billingCycle?: string; // <-- Just add this line
-  status: "upcoming" | "due-soon" | "overdue" | "renewed" | "cancelled";
+  billingCycle?: string; 
+  status: "upcoming" | "due-soon" | "overdue" | "renewed" | "cancelled" | string;
   reminderEnabled: boolean;
-  reminderDaysBefore: number | null;
+  reminderDaysBefore: number[]; // UI handles this as an array
   websiteDomain?: string | null;
 }
 
