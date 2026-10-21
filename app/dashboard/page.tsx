@@ -156,19 +156,19 @@ export default function Dashboard() {
 
       <div className="relative z-10 mx-auto max-w-6xl">
         
-        {/* Header */}
-        <div className="relative z-50 flex flex-col gap-4 mb-8 sm:flex-row sm:items-center sm:justify-between animate-fade-in-up">
+        {/* Header - FIX: Changed from z-50 to z-[100] to always float above SpendingSummary */}
+        <div className="relative z-[100] flex flex-col gap-4 mb-8 sm:flex-row sm:items-center sm:justify-between animate-fade-in-up">
           <div>
             <h1 className="text-3xl font-bold text-white tracking-tight">Welcome back</h1>
             <p className="hidden sm:block text-sm text-zinc-400 mt-1">
               Manage and track your upcoming digital and financial renewals.
             </p>
           </div>
-                    <div className="flex items-center gap-4 self-start sm:self-auto">
+          <div className="flex items-center gap-4 self-start sm:self-auto">
             <div className="hidden lg:block">
               <NotificationBell />
             </div>
-                   <button
+            <button
               onClick={() => { setEditingRenewal(null); setIsModalOpen(true); }}
               aria-label="Add renewal"
               className="flex items-center justify-center gap-2 rounded-full sm:rounded-xl bg-[#4338ca] w-11 h-11 sm:w-auto sm:h-auto sm:px-5 sm:py-2.5 text-sm font-semibold text-white shadow-md hover:bg-[#3730a3] hover:-translate-y-0.5 transition-all cursor-pointer whitespace-nowrap flex-shrink-0"
@@ -302,7 +302,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-           {isModalOpen && (
+      {isModalOpen && (
         <AddRenewalModal
           onClose={() => setIsModalOpen(false)}
           onAdd={handleAddRenewal}

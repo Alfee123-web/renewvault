@@ -13,6 +13,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard" },
   { label: "Renewals", href: "/dashboard/renewals" },
   { label: "Reminders", href: "/dashboard/reminders" },
+  { label: "Rates", href: "/dashboard/rates" }, // <-- New Rates Link
   { label: "Settings", href: "/dashboard/settings" },
 ];
 
@@ -38,6 +39,14 @@ function IconBell() {
     </svg>
   );
 }
+function IconRates() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+      <polyline points="16 7 22 7 22 13" />
+    </svg>
+  );
+}
 function IconSettings() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -46,7 +55,9 @@ function IconSettings() {
     </svg>
   );
 }
-const ICONS = [IconDashboard, IconRenewals, IconBell, IconSettings];
+
+// Add the new IconRates to the exact corresponding index of NAV_ITEMS
+const ICONS = [IconDashboard, IconRenewals, IconBell, IconRates, IconSettings];
 
 function CollapseToggleIcon({ collapsed }: { collapsed: boolean }) {
   return (

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { Renewal } from "@/lib/types";
+import { getExchangeRates } from "@/app/actions/rates";
 
 // --- POPULAR SUBSCRIPTIONS TEMPLATES ---
 const PREDEFINED_SERVICES = [
@@ -24,8 +25,8 @@ interface AddRenewalModalProps {
   onAdd: (renewal: Renewal) => void;
   onUpdate: (renewal: Renewal) => void;
   editingRenewal: Renewal | null;
-  renewals?: Renewal[]; // Added to fix Vercel Type error
-  onSwitchToEdit?: (renewal: any) => void; // Added to fix Vercel Type error
+  renewals?: Renewal[];
+  onSwitchToEdit?: (renewal: any) => void;
 }
 
 // --- CLEAN MINIMAL ICONS ---
@@ -64,17 +65,30 @@ export default function AddRenewalModal({
   const [isCurrencyOpen, setIsCurrencyOpen] = useState(false);
   const [isBillingOpen, setIsBillingOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [availableCurrencies, setAvailableCurrencies] = useState<string[]>(["USD", "EUR", "GBP", "INR"]); // Default fallback
 
   // Calendar Navigation State
   const [calDate, setCalDate] = useState(new Date());
 
-  const currencies = ["USD", "EUR", "GBP", "INR"];
   const billingCycles = [
     { value: "monthly", label: "Monthly" },
     { value: "yearly", label: "Yearly" },
   ];
 
-  // Today's date as YYYY-MM-DD, used to block past-date selection (today itself is allowed)
+  // Fetch live currencies on mount
+  useEffect(() => {
+    async function loadCurrencies() {
+      try {
+        const rates = await getExchangeRates();
+        setAvailableCurrencies(Object.keys(rates).sort());
+      } catch (error) {
+        console.error("Failed to load exchange rates for modal", error);
+      }
+    }
+    loadCurrencies();
+  }, []);
+
+  // Today's date as YYYY-MM-DD
   const getTodayStr = () => {
     const t = new Date();
     return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
@@ -106,11 +120,6 @@ export default function AddRenewalModal({
   }, [editingRenewal]);
 
   // --- DUPLICATE DETECTION ---
-  // Warns (doesn't block) if an active/upcoming renewal already matches this
-  // service by name OR website domain. Skipped entirely while editing an
-  // existing renewal (so editing Netflix doesn't warn against itself).
-  // `renewals` is optional (see AddRenewalModalProps), so we fall back to an
-  // empty array whenever the caller doesn't pass it in.
   const duplicateRenewal = useMemo(() => {
     if (editingRenewal) return null;
     if (!formData.name.trim() && !formData.websiteDomain) return null;
@@ -139,8 +148,6 @@ export default function AddRenewalModal({
     if (!formData.dueDate) {
       newErrors.dueDate = "Due date is required.";
     } else if (!editingRenewal && formData.dueDate < todayStr) {
-      // Only block past dates when creating a NEW renewal.
-      // Editing an existing (possibly already-overdue) renewal is still allowed.
       newErrors.dueDate = "Invalid date — please select today or a future date.";
     }
     if (!formData.amount || parseFloat(formData.amount) <= 0) newErrors.amount = "Valid amount is required.";
@@ -191,10 +198,9 @@ export default function AddRenewalModal({
   const handleSelectDay = (day: number) => {
     const formattedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
-    // Block past dates — today is allowed, anything before today is not
     if (formattedDate < todayStr) {
       setErrors({ ...errors, dueDate: "Invalid date — please select today or a future date." });
-      return; // keep the calendar open so the user can pick again
+      return; 
     }
 
     setFormData({ ...formData, dueDate: formattedDate });
@@ -241,7 +247,7 @@ export default function AddRenewalModal({
             </div>
             {errors.name && <p className="text-[#ef4444] text-xs mt-1.5 px-1">{errors.name}</p>}
 
-            {/* --- DUPLICATE WARNING (non-blocking) --- */}
+            {/* --- DUPLICATE WARNING --- */}
             {duplicateRenewal && (
               <div className="mt-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-2.5 flex items-start gap-2.5 animate-fade-in-up">
                 <span className="text-amber-400 mt-0.5 flex-shrink-0"><AlertIcon /></span>
@@ -427,7 +433,7 @@ export default function AddRenewalModal({
             )}
           </div>
 
-          {/* --- AMOUNT & CURRENCY (Custom Arrows Added) --- */}
+          {/* --- AMOUNT & CURRENCY --- */}
           <div className="relative z-20">
             <div className="flex gap-3">
               <div className="relative flex-1">
@@ -440,13 +446,11 @@ export default function AddRenewalModal({
                     if (errors.amount) setErrors({ ...errors, amount: "" });
                   }}
                   placeholder="Amount"
-                  // appearance-none and webkit pseudo-class removal fixes the white box
                   className={`w-full h-full rounded-xl border bg-transparent pl-4 pr-10 py-3.5 text-sm text-white placeholder:text-[#888] focus:outline-none transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
                     errors.amount ? "border-red-500/80 focus:border-red-500" : "border-[var(--border)] focus:border-[#5b5fd8]"
                   }`}
                 />
                 
-                {/* Custom Stacked Arrows */}
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-1">
                   <button
                     type="button"
@@ -481,8 +485,8 @@ export default function AddRenewalModal({
                 {isCurrencyOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setIsCurrencyOpen(false)} />
-                    <div className="absolute z-20 w-full mt-1 rounded-xl border border-[var(--border)] bg-[#121212] shadow-xl overflow-hidden py-1 animate-fade-in-up">
-                      {currencies.map((currency) => (
+                    <div className="absolute right-0 z-20 min-w-[120px] mt-1 max-h-56 overflow-y-auto rounded-xl border border-[var(--border)] bg-[#121212] shadow-xl py-1 animate-fade-in-up [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-zinc-700 [&::-webkit-scrollbar-thumb]:rounded-full">
+                      {availableCurrencies.map((currency) => (
                         <div
                           key={currency}
                           onClick={() => {
@@ -549,7 +553,7 @@ export default function AddRenewalModal({
               </div>
             </div>
 
-            {/* Reminder Checklist (New Multi-Select UI) */}
+            {/* Reminder Checklist */}
             <div className="space-y-2">
               <label className="text-[11px] font-bold text-[#888] tracking-widest uppercase">
                 Reminder Settings

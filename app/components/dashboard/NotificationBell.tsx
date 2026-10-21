@@ -65,7 +65,7 @@ export default function NotificationBell() {
   const unreadCount = isLoaded ? notifications.filter(n => n.unread).length : 0;
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative inline-block" ref={dropdownRef}>
       {/* Bell Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -77,9 +77,9 @@ export default function NotificationBell() {
         )}
       </button>
 
-      {/* Dropdown Panel - Added sm:w-80 sm:max-w-none to fix desktop clipping */}
+      {/* Dropdown Panel - FIX: Changed sm:top-auto to sm:top-full */}
       {isOpen && (
-        <div className="fixed left-4 right-4 top-20 sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 w-auto sm:w-80 max-w-full sm:max-w-none rounded-2xl border border-zinc-800 bg-[#121214] shadow-2xl z-50 animate-fade-in-up overflow-hidden">
+        <div className="fixed left-4 right-4 top-20 sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 w-auto sm:w-80 max-w-full sm:max-w-none rounded-2xl border border-zinc-800 bg-[#121214] shadow-2xl z-50 animate-fade-in-up overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800 bg-zinc-900">
             <h3 className="text-sm font-bold text-white">Notifications</h3>
