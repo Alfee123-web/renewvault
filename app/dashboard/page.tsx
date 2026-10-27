@@ -8,6 +8,7 @@ import SpendingSummary from "@/app/components/dashboard/SpendingSummary";
 import CalendarView from "@/app/components/dashboard/CalendarView";
 import NotificationBell from "@/app/components/dashboard/NotificationBell";
 import EmptyState from "@/app/components/dashboard/EmptyState";
+import NotificationPrompt from "@/app/components/NotificationPrompt";
 import {
   getRenewals,
   createRenewal,
@@ -180,6 +181,11 @@ export default function Dashboard() {
               <span className="hidden sm:inline">+ Add renewal</span>
             </button>
           </div>
+        </div>
+
+        {/* --- PUSH NOTIFICATION PROMPT --- */}
+        <div className="mb-8 animate-fade-in-up">
+          <NotificationPrompt />
         </div>
 
         {/* --- SPENDING SUMMARY COMPONENT --- */}

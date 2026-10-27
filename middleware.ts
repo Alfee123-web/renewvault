@@ -6,6 +6,8 @@ const { auth } = NextAuth(authConfig);
 export default auth;
 
 export const config = {
-  // This tells Next.js to protect all routes EXCEPT public files and API routes
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$).*)"],
+  // This tells Next.js to protect all routes EXCEPT public files, PWA files and API routes
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico|manifest\\.json|sw\\.js|.*\\.png$).*)",
+  ],
 };
