@@ -15,6 +15,7 @@ function EditIcon() { return <svg width="14" height="14" viewBox="0 0 24 24" fil
 function TrashIcon() { return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>; }
 function CheckIcon() { return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>; }
 function ExternalLinkIcon() { return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>; }
+function UsersIcon() { return <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>; }
 
 export default function RenewalCard({
   renewal,
@@ -28,12 +29,21 @@ export default function RenewalCard({
     year: "numeric",
   });
 
-  const formattedAmount = new Intl.NumberFormat("en-US", {
+  const currencyFormatter = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: renewal.currency || "USD",
-  }).format(renewal.amount);
+  });
+
+  const formattedAmount = currencyFormatter.format(renewal.amount);
 
   const cycleLabel = renewal.billingCycle === "yearly" ? "/yr" : "/mo";
+
+  // --- COST SPLITTING ---
+  const splitCount = renewal.splitCount && renewal.splitCount > 1 ? renewal.splitCount : 1;
+  const isSplit = splitCount > 1;
+  const yourShare = currencyFormatter.format(renewal.amount / splitCount);
+  const visibleAvatars = Math.min(splitCount, 3);
+  const extraPeople = splitCount - visibleAvatars;
 
   const handleOpenService = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -88,11 +98,42 @@ export default function RenewalCard({
 
       {/* --- MIDDLE SECTION --- */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-5 sm:mb-6 pb-5 sm:pb-6 border-b border-zinc-800/60">
-        <div>
+        <div className="min-w-0">
           <p className="text-xl sm:text-2xl font-bold text-white flex items-baseline gap-1 truncate">
             {formattedAmount}
             <span className="text-xs sm:text-sm font-medium text-zinc-500">{cycleLabel}</span>
           </p>
+
+          {isSplit && (
+            <div className="mt-2.5 flex items-center gap-2.5">
+              {/* Overlapping "split with" avatars */}
+              <div className="flex items-center -space-x-2">
+                {Array.from({ length: visibleAvatars }).map((_, i) => (
+                  <span
+                    key={i}
+                    className={`flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#121214] text-[10px] font-bold ${
+                      i === 0
+                        ? "bg-[#5b5fd8] text-white"
+                        : "bg-zinc-800 text-zinc-400"
+                    }`}
+                    title={i === 0 ? "You" : "Shared with"}
+                  >
+                    {i === 0 ? "You" : <UsersIcon />}
+                  </span>
+                ))}
+                {extraPeople > 0 && (
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#121214] bg-zinc-800 text-[9px] font-bold text-zinc-300">
+                    +{extraPeople}
+                  </span>
+                )}
+              </div>
+
+              <p className="text-xs font-medium text-[#8b8df1]">
+                {yourShare}
+                <span className="text-zinc-500"> your share · split {splitCount} ways</span>
+              </p>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-1.5 text-zinc-400">
           <CalendarIcon />

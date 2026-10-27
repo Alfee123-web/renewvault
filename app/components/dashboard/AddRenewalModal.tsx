@@ -19,6 +19,8 @@ const PREDEFINED_SERVICES = [
   { id: "custom", name: "Other (Custom)", category: "", domain: "" },
 ];
 
+const MAX_SPLIT = 10;
+
 interface AddRenewalModalProps {
   onClose: () => void;
   onAdd: (renewal: Renewal) => void;
@@ -37,6 +39,9 @@ function ChevronRightIcon() { return <svg width="16" height="16" viewBox="0 0 24
 function ChevronUpSmallIcon() { return <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>; }
 function ChevronDownSmallIcon() { return <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>; }
 function AlertIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>; }
+function UsersMinimalIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>; }
+function MinusIcon() { return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /></svg>; }
+function PlusIcon() { return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>; }
 
 export default function AddRenewalModal({
   onClose,
@@ -55,6 +60,7 @@ export default function AddRenewalModal({
     billingCycle: "monthly",
     reminderDaysBefore: [] as number[],
     websiteDomain: "",
+    splitCount: 1,
   });
 
   // UI State
@@ -95,6 +101,10 @@ export default function AddRenewalModal({
         billingCycle: editingRenewal.billingCycle || "monthly",
         reminderDaysBefore: editingRenewal.reminderDaysBefore || [],
         websiteDomain: editingRenewal.websiteDomain || "",
+        splitCount:
+          editingRenewal.splitCount && editingRenewal.splitCount > 1
+            ? editingRenewal.splitCount
+            : 1,
       });
 
       if (editingRenewal.dueDate) {
@@ -130,6 +140,24 @@ export default function AddRenewalModal({
     );
   }, [formData.name, formData.websiteDomain, renewals, editingRenewal]);
 
+  // --- SPLIT PREVIEW ---
+  const splitShareLabel = useMemo(() => {
+    const amount = parseFloat(formData.amount);
+    if (formData.splitCount <= 1 || !amount || amount <= 0) return null;
+    const share = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: formData.currency || "USD",
+    }).format(amount / formData.splitCount);
+    return `${share} each`;
+  }, [formData.amount, formData.currency, formData.splitCount]);
+
+  const handleSplitStep = (delta: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      splitCount: Math.min(MAX_SPLIT, Math.max(1, prev.splitCount + delta)),
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: { [key: string]: string } = {};
@@ -159,6 +187,7 @@ export default function AddRenewalModal({
       currency: formData.currency,
       billingCycle: formData.billingCycle,
       websiteDomain: formData.websiteDomain,
+      splitCount: formData.splitCount,
       status: "upcoming", 
       reminderEnabled: formData.reminderDaysBefore.length > 0,
       reminderDaysBefore: formData.reminderDaysBefore,
@@ -503,6 +532,52 @@ export default function AddRenewalModal({
               </div>
             </div>
             {errors.amount && <p className="text-[#ef4444] text-xs mt-1.5 px-1">{errors.amount}</p>}
+          </div>
+
+          {/* --- SPLIT WITH (Cost Splitting) --- */}
+          <div className="relative z-10">
+            <label className="text-[11px] font-bold text-[#888] tracking-widest uppercase mb-2 block">
+              Split With
+            </label>
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-[#121212] px-4 py-2.5">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="text-zinc-400 flex-shrink-0"><UsersMinimalIcon /></span>
+                <div className="min-w-0">
+                  <p className="text-sm text-white truncate">
+                    {formData.splitCount === 1
+                      ? "Just me"
+                      : `You + ${formData.splitCount - 1} ${formData.splitCount - 1 === 1 ? "other" : "others"}`}
+                  </p>
+                  {splitShareLabel && (
+                    <p className="text-xs font-medium text-[#8b8df1] mt-0.5 truncate">{splitShareLabel}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={() => handleSplitStep(-1)}
+                  disabled={formData.splitCount <= 1}
+                  aria-label="Decrease people sharing"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] text-zinc-400 hover:text-white hover:border-[#5b5fd8]/60 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-zinc-400 disabled:hover:border-[var(--border)]"
+                >
+                  <MinusIcon />
+                </button>
+                <span className="w-5 text-center text-sm font-semibold text-white">
+                  {formData.splitCount}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleSplitStep(1)}
+                  disabled={formData.splitCount >= MAX_SPLIT}
+                  aria-label="Increase people sharing"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] text-zinc-400 hover:text-white hover:border-[#5b5fd8]/60 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-zinc-400 disabled:hover:border-[var(--border)]"
+                >
+                  <PlusIcon />
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3 pt-2 relative z-10">
