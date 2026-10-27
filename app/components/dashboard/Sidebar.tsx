@@ -13,7 +13,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard" },
   { label: "Renewals", href: "/dashboard/renewals" },
   { label: "Reminders", href: "/dashboard/reminders" },
-  { label: "Rates", href: "/dashboard/rates" }, // <-- New Rates Link
+  { label: "Rates", href: "/dashboard/rates" },
   { label: "Settings", href: "/dashboard/settings" },
 ];
 
@@ -56,12 +56,11 @@ function IconSettings() {
   );
 }
 
-// Add the new IconRates to the exact corresponding index of NAV_ITEMS
 const ICONS = [IconDashboard, IconRenewals, IconBell, IconRates, IconSettings];
 
 function CollapseToggleIcon({ collapsed }: { collapsed: boolean }) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-zinc-400 transition-transform duration-300 ${collapsed ? "rotate-180" : ""}`}>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-zinc-400 transition-transform duration-300 ${collapsed ? "rotate-180" : ""}`}>
       <rect width="18" height="18" x="3" y="3" rx="2" />
       <path d="M9 3v18" />
       <path d="m14 15-3-3 3-3" />
@@ -71,23 +70,23 @@ function CollapseToggleIcon({ collapsed }: { collapsed: boolean }) {
 
 function Logo({ collapsed }: { collapsed: boolean }) {
   return (
-    <div className="flex items-center gap-3 overflow-hidden">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="6 4 52 52" fill="none" className="w-full h-full">
+    <div className="flex items-center gap-3 overflow-hidden group">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center transition-transform duration-300 group-hover:scale-105">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="6 4 52 52" fill="none" className="w-full h-full drop-shadow-md">
           <defs>
             <linearGradient id="sidebar-logo-grad" x1="12" y1="10" x2="52" y2="54" gradientUnits="userSpaceOnUse">
-              <stop offset="0" stopColor="#F97316"/>
-              <stop offset="1" stopColor="#4338CA"/>
+              <stop offset="0" stopColor="var(--ember)"/>
+              <stop offset="1" stopColor="var(--accent)"/>
             </linearGradient>
           </defs>
-          <path d="M32 10L47 17V29.4C47 39.5 40.6 48.1 32 51.5C23.4 48.1 17 39.5 17 29.4V17L32 10Z" fill="#0F0F10" stroke="url(#sidebar-logo-grad)" strokeWidth="3" strokeLinejoin="round"/>
+          <path d="M32 10L47 17V29.4C47 39.5 40.6 48.1 32 51.5C23.4 48.1 17 39.5 17 29.4V17L32 10Z" fill="var(--surface)" stroke="url(#sidebar-logo-grad)" strokeWidth="3" strokeLinejoin="round"/>
           <path d="M25 24.5V21.8C25 18 28 15 32 15C36 15 39 18 39 21.8V24.5" stroke="url(#sidebar-logo-grad)" strokeWidth="3" strokeLinecap="round"/>
-          <path d="M23.5 26H40.5V37.5H23.5V26Z" fill="#151516"/>
+          <path d="M23.5 26H40.5V37.5H23.5V26Z" fill="var(--surface-2)"/>
           <path d="M28 35.5V28L36 35.5V28" stroke="url(#sidebar-logo-grad)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </div>
       {!collapsed && (
-        <span className="whitespace-nowrap text-lg font-bold tracking-wide text-[var(--text-primary)]">
+        <span className="whitespace-nowrap text-lg font-extrabold tracking-tight text-[var(--text-primary)]">
           RenewVault
         </span>
       )}
@@ -108,26 +107,26 @@ function NavList({ collapsed }: { collapsed: boolean }) {
           <Link
             key={item.label}
             href={item.href}
-            className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold tracking-wide transition-all ${
-              collapsed ? "justify-center px-0" : ""
+            className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold tracking-wide transition-all duration-200 ${
+              collapsed ? "justify-center px-0" : "hover:translate-x-1"
             } ${
               isActive
-                ? "bg-[#5b5fd8]/15 text-white border border-[#5b5fd8]/30 shadow-sm"
-                : "text-zinc-400 hover:bg-zinc-900/60 hover:text-zinc-200 border border-transparent"
+                ? "bg-gradient-to-r from-[var(--accent)]/20 to-[var(--accent)]/5 text-white border border-[var(--accent)]/40 shadow-[0_0_15px_rgba(67,56,202,0.15)]"
+                : "text-[var(--text-body)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)] border border-transparent"
             }`}
           >
             {isActive && !collapsed && (
-              <div className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-[#5b5fd8]" />
+              <div className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-[var(--accent)] shadow-[0_0_8px_var(--accent)]" />
             )}
 
-            <span className={`flex-shrink-0 transition-colors ${isActive ? "text-[#8b8df1]" : "text-zinc-400 group-hover:text-zinc-200"}`}>
+            <span className={`flex-shrink-0 transition-colors ${isActive ? "text-white" : "text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]"}`}>
               <Icon />
             </span>
             
             {!collapsed && <span className="truncate">{item.label}</span>}
 
             {collapsed && (
-              <span className="pointer-events-none absolute left-full ml-3 whitespace-nowrap rounded-lg border border-zinc-800 bg-[#121214] px-3 py-1.5 text-xs font-medium text-white opacity-0 shadow-2xl transition-all duration-200 group-hover:opacity-100 z-50">
+              <span className="pointer-events-none absolute left-full ml-3 whitespace-nowrap rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-2xl transition-all duration-200 group-hover:opacity-100 z-50 backdrop-blur-md">
                 {item.label}
               </span>
             )}
@@ -165,18 +164,16 @@ export default function Sidebar() {
   }
 
   return (
-    
-        <aside
-      className={`hidden lg:flex sticky top-0 z-30 h-screen shrink-0 flex-col border-r border-zinc-800/80 bg-[#121214]/90 backdrop-blur-xl transition-all duration-300 ease-in-out ${
-
+    <aside
+      className={`hidden lg:flex sticky top-0 z-30 h-screen shrink-0 flex-col border-r border-[var(--border)] bg-[var(--surface)]/90 backdrop-blur-2xl transition-all duration-300 ease-in-out shadow-2xl ${
         collapsed ? "w-20" : "w-64"
       }`}
     >
-      <div className={`flex items-center border-b border-zinc-800/60 px-4 py-5 ${collapsed ? "flex-col gap-3 justify-center" : "justify-between"}`}>
+      <div className={`flex items-center border-b border-[var(--border)] px-4 py-5 ${collapsed ? "flex-col gap-3 justify-center" : "justify-between"}`}>
         <Logo collapsed={collapsed} />
         <button
           onClick={toggleCollapsed}
-          className="hidden lg:flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/80 transition-all cursor-pointer shadow-sm"
+          className="hidden lg:flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--surface-2)] border border-[var(--border)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-3)] transition-all cursor-pointer shadow-sm group"
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           <CollapseToggleIcon collapsed={collapsed} />
