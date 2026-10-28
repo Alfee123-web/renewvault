@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Renewal } from "@/lib/types";
+import { getExchangeRates } from "@/app/actions/rates";
+import { createWorker } from "tesseract.js";
 
 // --- POPULAR SUBSCRIPTIONS TEMPLATES ---
 const PREDEFINED_SERVICES = [
@@ -26,11 +28,11 @@ interface AddRenewalModalProps {
   onAdd: (renewal: Renewal) => void;
   onUpdate: (renewal: Renewal) => void;
   editingRenewal: Renewal | null;
-  renewals?: Renewal[]; // Added to fix Vercel Type error
-  onSwitchToEdit?: (renewal: any) => void; // Added to fix Vercel Type error
+  renewals?: Renewal[];
+  onSwitchToEdit?: (renewal: any) => void;
 }
 
-// --- CLEAN MINIMAL ICONS ---
+// --- ICONS ---
 function LayersIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>; }
 function TagIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7-7A2 2 0 0 0 12 6H4a2 2 0 0 0-2 2v8a2 2 0 0 0 .59 1.41l7 7a2 2 0 0 0 2.83 0l8-8a2 2 0 0 0 0-2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>; }
 function CalendarMinimalIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>; }
@@ -42,6 +44,9 @@ function AlertIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fi
 function UsersMinimalIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>; }
 function MinusIcon() { return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /></svg>; }
 function PlusIcon() { return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>; }
+function UploadCloudIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path><path d="M12 12v9"></path><path d="m16 16-4-4-4 4"></path></svg>; }
+function XSmallIcon() { return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>; }
+function CheckIcon() { return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400"><polyline points="20 6 9 17 4 12"></polyline></svg>; }
 
 export default function AddRenewalModal({
   onClose,
@@ -70,17 +75,35 @@ export default function AddRenewalModal({
   const [isCurrencyOpen, setIsCurrencyOpen] = useState(false);
   const [isBillingOpen, setIsBillingOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [availableCurrencies, setAvailableCurrencies] = useState<string[]>(["USD", "EUR", "GBP", "INR"]); 
+
+  // Receipt Upload & Local OCR State
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Calendar Navigation State
   const [calDate, setCalDate] = useState(new Date());
 
-  const currencies = ["USD", "EUR", "GBP", "INR"];
   const billingCycles = [
     { value: "monthly", label: "Monthly" },
     { value: "yearly", label: "Yearly" },
   ];
 
-  // Today's date as YYYY-MM-DD, used to block past-date selection (today itself is allowed)
+  useEffect(() => {
+    async function loadCurrencies() {
+      try {
+        const rates = await getExchangeRates();
+        setAvailableCurrencies(Object.keys(rates).sort());
+      } catch (error) {
+        console.error("Failed to load exchange rates for modal", error);
+      }
+    }
+    loadCurrencies();
+  }, []);
+
   const getTodayStr = () => {
     const t = new Date();
     return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
@@ -115,18 +138,119 @@ export default function AddRenewalModal({
     }
   }, [editingRenewal]);
 
-  // --- DUPLICATE DETECTION ---
-  // Warns (doesn't block) if an active/upcoming renewal already matches this
-  // service by name OR website domain. Skipped entirely while editing an
-  // existing renewal (so editing Netflix doesn't warn against itself).
-  // `renewals` is optional (see AddRenewalModalProps), so we fall back to an
-  // empty array whenever the caller doesn't pass it in.
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      processFile(e.target.files[0]);
+    }
+  };
+
+  // Process file and run local OCR via Tesseract.js with smart matching
+  const processFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      alert("Please upload an image file (JPG, PNG).");
+      return;
+    }
+    setReceiptFile(file);
+    const objectUrl = URL.createObjectURL(file);
+    setReceiptPreview(objectUrl);
+
+    try {
+      setIsAnalyzing(true);
+      
+      const worker = await createWorker('eng');
+      const ret = await worker.recognize(file);
+      await worker.terminate();
+
+      const text = ret.data.text;
+      console.log("Extracted OCR Text:", text);
+
+      // --- 1. Smart Service Name Detection ---
+      let detectedName = formData.name;
+      let detectedDomain = formData.websiteDomain;
+      const lowerText = text.toLowerCase();
+
+      for (const service of PREDEFINED_SERVICES) {
+        if (service.id !== 'custom' && lowerText.includes(service.name.toLowerCase())) {
+          detectedName = service.name;
+          detectedDomain = service.domain;
+          break;
+        }
+      }
+
+      // --- 2. Find Amount ---
+      const amountRegex = /(?:[\$€£₹¥USD|EUR|GBP|INR]\s*)?(\d{1,5}[,.]\d{2})/i;
+      const amountMatch = text.match(amountRegex);
+      const parsedAmount = amountMatch ? amountMatch[1].replace(',', '.') : formData.amount;
+
+      // --- 3. Find Currency Code ---
+      let parsedCurrency = formData.currency;
+      if (/EUR|€/i.test(text)) parsedCurrency = "EUR";
+      else if (/GBP|£/i.test(text)) parsedCurrency = "GBP";
+      else if (/INR|₹/i.test(text)) parsedCurrency = "INR";
+      else if (/USD|\$/i.test(text)) parsedCurrency = "USD";
+
+      // --- 4. Find Date (Improved for formats like "25 Oct, 2023") ---
+      let parsedDueDate = formData.dueDate;
+      const dateRegex = /(\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s,]*\d{4})|(\d{4}[-/]\d{2}[-/]\d{2})|(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i;
+      const dateMatch = text.match(dateRegex);
+
+      if (dateMatch) {
+        const parsedDateObj = new Date(dateMatch[0]);
+        if (!isNaN(parsedDateObj.getTime())) {
+          parsedDueDate = parsedDateObj.toISOString().split("T")[0];
+        }
+      }
+
+      // Update form fields
+      setFormData((prev) => ({
+        ...prev,
+        name: detectedName || prev.name,
+        websiteDomain: detectedDomain || prev.websiteDomain,
+        amount: parsedAmount,
+        currency: parsedCurrency,
+        dueDate: parsedDueDate,
+      }));
+
+      if (detectedDomain) {
+        setIsCustom(false);
+      }
+
+    } catch (err) {
+      console.error("Local OCR Parsing Error:", err);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const removeReceipt = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setReceiptFile(null);
+    if (receiptPreview) URL.revokeObjectURL(receiptPreview);
+    setReceiptPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const duplicateRenewal = useMemo(() => {
     if (editingRenewal) return null;
     if (!formData.name.trim() && !formData.websiteDomain) return null;
-
     const list = renewals ?? [];
-
     return (
       list.find((r) => {
         if (r.status === "cancelled") return false;
@@ -167,8 +291,6 @@ export default function AddRenewalModal({
     if (!formData.dueDate) {
       newErrors.dueDate = "Due date is required.";
     } else if (!editingRenewal && formData.dueDate < todayStr) {
-      // Only block past dates when creating a NEW renewal.
-      // Editing an existing (possibly already-overdue) renewal is still allowed.
       newErrors.dueDate = "Invalid date — please select today or a future date.";
     }
     if (!formData.amount || parseFloat(formData.amount) <= 0) newErrors.amount = "Valid amount is required.";
@@ -209,7 +331,6 @@ export default function AddRenewalModal({
     if (errors.amount) setErrors({ ...errors, amount: "" });
   };
 
-  // Calendar Math Helpers
   const year = calDate.getFullYear();
   const month = calDate.getMonth();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -219,13 +340,10 @@ export default function AddRenewalModal({
 
   const handleSelectDay = (day: number) => {
     const formattedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-
-    // Block past dates — today is allowed, anything before today is not
     if (formattedDate < todayStr) {
       setErrors({ ...errors, dueDate: "Invalid date — please select today or a future date." });
-      return; // keep the calendar open so the user can pick again
+      return; 
     }
-
     setFormData({ ...formData, dueDate: formattedDate });
     setIsCalendarOpen(false);
     if (errors.dueDate) setErrors({ ...errors, dueDate: "" });
@@ -233,7 +351,7 @@ export default function AddRenewalModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="w-full max-w-[440px] rounded-2xl border border-[var(--border)] bg-[#121212] p-8 shadow-2xl animate-fade-in-up">
+      <div className="w-full max-w-[440px] max-h-[90vh] overflow-y-auto custom-scrollbar rounded-2xl border border-[var(--border)] bg-[#121212] p-8 shadow-2xl animate-fade-in-up">
         
         <h2 className="text-xl font-bold text-white mb-6 text-center">
           {editingRenewal ? "Edit renewal" : "Add renewal"}
@@ -241,6 +359,69 @@ export default function AddRenewalModal({
 
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
           
+          {/* --- RECEIPT UPLOAD & OCR SCANNER ZONE --- */}
+          {!editingRenewal && (
+            <div 
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={() => !receiptFile && fileInputRef.current?.click()}
+              className={`relative flex flex-col items-center justify-center w-full p-5 rounded-xl border-2 border-dashed transition-all ${
+                receiptFile ? 'border-zinc-700 bg-zinc-900/60' :
+                isDragging ? 'border-zinc-500 bg-zinc-800/40' : 'border-zinc-800 bg-zinc-900/40 hover:border-zinc-700 hover:bg-zinc-800/40 cursor-pointer'
+              }`}
+            >
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept="image/*"
+                onChange={handleFileChange}
+              />
+              
+              {receiptPreview ? (
+                <div className="flex items-center gap-4 w-full">
+                  <div className="h-12 w-12 rounded-lg bg-zinc-800 overflow-hidden shrink-0 border border-zinc-700">
+                    <img src={receiptPreview} alt="Receipt preview" className="w-full h-full object-cover opacity-80" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-white truncate flex items-center gap-1.5">
+                      {isAnalyzing ? (
+                        <>
+                          <span className="h-2 w-2 rounded-full bg-indigo-400 animate-ping" /> Scanning receipt locally...
+                        </>
+                      ) : (
+                        <>
+                          <CheckIcon /> Auto-filled from receipt
+                        </>
+                      )}
+                    </p>
+                    <p className="text-[10px] text-zinc-400 mt-0.5 truncate">{receiptFile?.name}</p>
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={removeReceipt}
+                    className="p-2 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors"
+                  >
+                    <XSmallIcon />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-2 text-center pointer-events-none">
+                  <div className="w-10 h-10 rounded-full bg-zinc-800/80 flex items-center justify-center text-zinc-400 mb-1">
+                    <UploadCloudIcon />
+                  </div>
+                  <p className="text-sm font-medium text-zinc-300">
+                    Auto-fill from receipt
+                  </p>
+                  <p className="text-xs text-zinc-500">
+                    Drag & drop an image, or click to browse
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* --- SERVICE DROPDOWN --- */}
           <div className="relative z-40">
             <label className="text-[11px] font-bold text-[#888] tracking-widest uppercase mb-2 block">
@@ -270,7 +451,6 @@ export default function AddRenewalModal({
             </div>
             {errors.name && <p className="text-[#ef4444] text-xs mt-1.5 px-1">{errors.name}</p>}
 
-            {/* --- DUPLICATE WARNING (non-blocking) --- */}
             {duplicateRenewal && (
               <div className="mt-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-2.5 flex items-start gap-2.5 animate-fade-in-up">
                 <span className="text-amber-400 mt-0.5 flex-shrink-0"><AlertIcon /></span>
@@ -357,7 +537,7 @@ export default function AddRenewalModal({
             </div>
           )}
 
-          {/* --- CUSTOM MINIMAL DUE DATE PICKER --- */}
+          {/* --- DUE DATE PICKER --- */}
           <div className="relative z-30">
             <label className="text-[11px] font-bold text-[#888] tracking-widest uppercase mb-2 block">
               Due Date
@@ -390,7 +570,6 @@ export default function AddRenewalModal({
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setIsCalendarOpen(false)} />
                 <div className="absolute z-20 left-0 w-full mt-2 rounded-2xl border border-[var(--border)] bg-[#121212] p-4 shadow-2xl animate-fade-in-up">
-                  {/* Calendar Header */}
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-sm font-bold text-white">
                       {monthName} {year}
@@ -413,7 +592,6 @@ export default function AddRenewalModal({
                     </div>
                   </div>
 
-                  {/* Weekday Names */}
                   <div className="grid grid-cols-7 mb-2">
                     {DAYS_OF_WEEK.map((d) => (
                       <div key={d} className="text-center text-[10px] font-bold text-zinc-500 uppercase">
@@ -422,7 +600,6 @@ export default function AddRenewalModal({
                     ))}
                   </div>
 
-                  {/* Days Grid */}
                   <div className="grid grid-cols-7 gap-1">
                     {Array.from({ length: firstDayOfMonth }).map((_, i) => (
                       <div key={`empty-${i}`} />
@@ -456,7 +633,7 @@ export default function AddRenewalModal({
             )}
           </div>
 
-          {/* --- AMOUNT & CURRENCY (Custom Arrows Added) --- */}
+          {/* --- AMOUNT & CURRENCY --- */}
           <div className="relative z-20">
             <div className="flex gap-3">
               <div className="relative flex-1">
@@ -469,13 +646,11 @@ export default function AddRenewalModal({
                     if (errors.amount) setErrors({ ...errors, amount: "" });
                   }}
                   placeholder="Amount"
-                  // appearance-none and webkit pseudo-class removal fixes the white box
                   className={`w-full h-full rounded-xl border bg-transparent pl-4 pr-10 py-3.5 text-sm text-white placeholder:text-[#888] focus:outline-none transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
                     errors.amount ? "border-red-500/80 focus:border-red-500" : "border-[var(--border)] focus:border-[#5b5fd8]"
                   }`}
                 />
                 
-                {/* Custom Stacked Arrows */}
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-1">
                   <button
                     type="button"
@@ -510,8 +685,8 @@ export default function AddRenewalModal({
                 {isCurrencyOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setIsCurrencyOpen(false)} />
-                    <div className="absolute z-20 w-full mt-1 rounded-xl border border-[var(--border)] bg-[#121212] shadow-xl overflow-hidden py-1 animate-fade-in-up">
-                      {currencies.map((currency) => (
+                    <div className="absolute right-0 z-20 min-w-[120px] mt-1 max-h-56 overflow-y-auto rounded-xl border border-[var(--border)] bg-[#121212] shadow-xl py-1 animate-fade-in-up [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-zinc-700 [&::-webkit-scrollbar-thumb]:rounded-full">
+                      {availableCurrencies.map((currency) => (
                         <div
                           key={currency}
                           onClick={() => {
@@ -624,7 +799,7 @@ export default function AddRenewalModal({
               </div>
             </div>
 
-            {/* Reminder Checklist (New Multi-Select UI) */}
+            {/* Reminder Checklist */}
             <div className="space-y-2">
               <label className="text-[11px] font-bold text-[#888] tracking-widest uppercase">
                 Reminder Settings

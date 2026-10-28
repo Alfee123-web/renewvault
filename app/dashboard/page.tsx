@@ -41,6 +41,7 @@ export default function Dashboard() {
   const [sortBy, setSortBy] = useState("date-asc");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRenewal, setEditingRenewal] = useState<Renewal | null>(null);
+  const [selectedDateForNew, setSelectedDateForNew] = useState<string | null>(null);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "calendar">("grid");
   const sortRef = useRef<HTMLDivElement>(null);
@@ -138,6 +139,13 @@ export default function Dashboard() {
 
   const openEditModal = (renewal: Renewal) => {
     setEditingRenewal(renewal);
+    setSelectedDateForNew(null);
+    setIsModalOpen(true);
+  };
+
+  const handleSelectDateForNew = (dateString: string) => {
+    setEditingRenewal(null);
+    setSelectedDateForNew(dateString);
     setIsModalOpen(true);
   };
 
@@ -158,19 +166,19 @@ export default function Dashboard() {
       <div className="relative z-10 mx-auto max-w-6xl">
         
         {/* Header */}
-        <div className="relative z-50 flex flex-col gap-4 mb-8 sm:flex-row sm:items-center sm:justify-between animate-fade-in-up">
+        <div className="relative z-[100] flex flex-col gap-4 mb-8 sm:flex-row sm:items-center sm:justify-between animate-fade-in-up">
           <div>
             <h1 className="text-3xl font-bold text-white tracking-tight">Welcome back</h1>
             <p className="hidden sm:block text-sm text-zinc-400 mt-1">
               Manage and track your upcoming digital and financial renewals.
             </p>
           </div>
-                    <div className="flex items-center gap-4 self-start sm:self-auto">
+          <div className="flex items-center gap-4 self-start sm:self-auto">
             <div className="hidden lg:block">
               <NotificationBell />
             </div>
-                   <button
-              onClick={() => { setEditingRenewal(null); setIsModalOpen(true); }}
+            <button
+              onClick={() => { setEditingRenewal(null); setSelectedDateForNew(null); setIsModalOpen(true); }}
               aria-label="Add renewal"
               className="flex items-center justify-center gap-2 rounded-full sm:rounded-xl bg-[#4338ca] w-11 h-11 sm:w-auto sm:h-auto sm:px-5 sm:py-2.5 text-sm font-semibold text-white shadow-md hover:bg-[#3730a3] hover:-translate-y-0.5 transition-all cursor-pointer whitespace-nowrap flex-shrink-0"
             >
@@ -191,7 +199,7 @@ export default function Dashboard() {
         {/* --- SPENDING SUMMARY COMPONENT --- */}
         <SpendingSummary renewals={renewals} isLoading={isLoading} />
 
-        {/* --- COMMAND / FILTER BAR (Non-Sticky) --- */}
+        {/* --- COMMAND / FILTER BAR --- */}
         <div className="flex flex-col gap-4 mb-8 rounded-2xl border border-zinc-800 bg-[#121214]/80 backdrop-blur-md p-3.5 shadow-sm animate-fade-in-up delay-200 lg:flex-row lg:items-center lg:justify-between">
           <div className="relative w-full lg:w-72">
             <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
@@ -288,10 +296,10 @@ export default function Dashboard() {
               title={renewals.length === 0 ? "No renewals added yet" : "No matching renewals found"}
               description={renewals.length === 0 ? "Get started by tracking your subscriptions, bills, and digital assets in one place." : "Try adjusting your search terms or filter selection."}
               actionLabel={renewals.length === 0 ? "Add your first renewal" : undefined}
-              onAction={renewals.length === 0 ? () => { setEditingRenewal(null); setIsModalOpen(true); } : undefined}
+              onAction={renewals.length === 0 ? () => { setEditingRenewal(null); setSelectedDateForNew(null); setIsModalOpen(true); } : undefined}
             />
           ) : viewMode === "calendar" ? (
-            <CalendarView renewals={filteredRenewals} onEdit={openEditModal} />
+            <CalendarView renewals={filteredRenewals} onEdit={openEditModal} onSelectDate={handleSelectDateForNew} />
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {filteredRenewals.map((renewal) => (
@@ -308,7 +316,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-           {isModalOpen && (
+      {isModalOpen && (
         <AddRenewalModal
           onClose={() => setIsModalOpen(false)}
           onAdd={handleAddRenewal}
