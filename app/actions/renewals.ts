@@ -23,6 +23,8 @@ function mapRenewalFromDB(prismaRenewal: DatabaseRenewal): UIRenewal {
       : [], 
       
     websiteDomain: prismaRenewal.websiteDomain,
+    // TODO (Akshat): Replace fallback with prismaRenewal.splitCount once Prisma schema is updated
+    splitCount: 1, 
   };
 }
 
@@ -60,6 +62,7 @@ export async function createRenewal(data: Omit<UIRenewal, "id">): Promise<UIRene
         
       websiteDomain: data.websiteDomain || null,
       userId: session.user.id,
+      // TODO (Akshat): Add `splitCount: data.splitCount` here after DB migration
     },
   });
 
@@ -93,6 +96,7 @@ export async function updateRenewal(id: string, data: UIRenewal): Promise<UIRene
         : null) as any,
         
       websiteDomain: data.websiteDomain || null,
+      // TODO (Akshat): Add `splitCount: data.splitCount` here after DB migration
     },
   });
 

@@ -15,6 +15,7 @@ export interface Renewal {
   reminderEnabled: boolean;
   reminderDaysBefore: number[]; // UI handles this as an array
   websiteDomain?: string | null;
+  splitCount?: number | null; // number of people sharing the cost (1 or empty = not split)
   createdAt?: string | Date;
 }
 

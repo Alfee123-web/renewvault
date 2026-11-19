@@ -11,9 +11,10 @@ function CloseIcon() { return <svg width="18" height="18" viewBox="0 0 24 24" fi
 interface CalendarViewProps {
   renewals: Renewal[];
   onEdit: (renewal: Renewal) => void;
+  onSelectDate: (dateString: string) => void;
 }
 
-export default function CalendarView({ renewals, onEdit }: CalendarViewProps) {
+export default function CalendarView({ renewals, onEdit, onSelectDate }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
@@ -93,30 +94,43 @@ export default function CalendarView({ renewals, onEdit }: CalendarViewProps) {
           const day = index + 1;
           const dateString = formatDateString(year, month, day);
           const isToday = dateString === todayString;
+          const isPast = dateString < todayString;
           const daysRenewals = renewals.filter((r) => r.dueDate === dateString);
           const hasRenewals = daysRenewals.length > 0;
 
           return (
             <button
               key={day}
-              onClick={() => hasRenewals && setSelectedDay(dateString)}
-              className="min-h-[56px] sm:min-h-[100px] p-1.5 sm:p-2 transition-colors text-left flex flex-col sm:block sm:cursor-default"
+              onClick={() => {
+                if (isPast) return; // Prevent clicking past dates completely
+                if (hasRenewals && window.innerWidth < 640) {
+                  setSelectedDay(dateString);
+                } else {
+                  onSelectDate(dateString);
+                }
+              }}
+              className={`relative min-h-[56px] sm:min-h-[100px] p-1.5 sm:p-2 transition-all duration-200 text-left flex flex-col sm:block ${
+                isPast 
+                  ? "opacity-40 cursor-default pointer-events-none" 
+                  : "cursor-pointer hover:z-20 hover:scale-[1.03] hover:shadow-2xl hover:rounded-xl hover:border-[#5b5fd8]/50"
+              }`}
               style={{
                 borderBottom: "1px solid color-mix(in srgb, var(--border) 60%, transparent)",
                 borderRight: "1px solid color-mix(in srgb, var(--border) 60%, transparent)",
                 background: isToday ? "var(--accent-soft)" : "transparent",
-                cursor: hasRenewals ? "pointer" : "default",
               }}
-              onMouseEnter={(e) => { if (!isToday) e.currentTarget.style.background = "var(--surface-2)"; }}
-              onMouseLeave={(e) => { if (!isToday) e.currentTarget.style.background = "transparent"; }}
+              onMouseEnter={(e) => { if (!isToday && !isPast) e.currentTarget.style.background = "#1a1a24"; }}
+              onMouseLeave={(e) => { if (!isToday && !isPast) e.currentTarget.style.background = "transparent"; }}
             >
               <div className="flex justify-between items-start mb-1">
                 <span
-                  className="text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full"
+                  className="text-sm font-bold w-6 h-6 flex items-center justify-center rounded-full"
                   style={
                     isToday
                       ? { background: "var(--accent)", color: "#fff", boxShadow: "0 0 0 3px color-mix(in srgb, var(--violet-glow) 25%, transparent)" }
-                      : { color: "var(--text-muted)" }
+                      : isPast
+                      ? { color: "var(--text-muted)" }
+                      : { color: "#ffffff" }
                   }
                 >
                   {day}
@@ -139,7 +153,7 @@ export default function CalendarView({ renewals, onEdit }: CalendarViewProps) {
                     key={renewal.id}
                     onClick={(e) => { e.stopPropagation(); onEdit(renewal); }}
                     title={`${renewal.name} (${renewal.currency || 'USD'} ${renewal.amount})`}
-                    className="group relative text-left w-full px-2 py-1.5 text-[11px] font-medium rounded-lg flex items-center justify-between cursor-pointer transition-all border border-zinc-800/80 bg-zinc-900/60 hover:bg-[#5b5fd8]/15 hover:border-[#5b5fd8]/50"
+                    className="group relative text-left w-full px-2 py-1.5 text-[11px] font-medium rounded-lg flex items-center justify-between cursor-pointer transition-all border border-zinc-800/80 bg-zinc-900/80 hover:bg-[#5b5fd8]/20 hover:border-[#5b5fd8]"
                   >
                     <div className="flex items-center gap-2 truncate">
                       {renewal.websiteDomain ? (
@@ -149,7 +163,7 @@ export default function CalendarView({ renewals, onEdit }: CalendarViewProps) {
                       )}
                       <span className="truncate text-white font-semibold text-[11px]">{renewal.name}</span>
                     </div>
-                    <span className="text-[10px] text-zinc-400 font-mono shrink-0 pl-1">
+                    <span className="text-[10px] text-zinc-300 font-mono shrink-0 pl-1">
                       {renewal.currency === "INR" ? "₹" : "$"}{renewal.amount}
                     </span>
                   </div>
@@ -160,7 +174,7 @@ export default function CalendarView({ renewals, onEdit }: CalendarViewProps) {
         })}
       </div>
 
-      {/* Mobile + tablet popover — day detail (below sm / 640px) */}
+      {/* Mobile popover for multiple items on small screens */}
       {selectedDay && (
         <div
           className="sm:hidden fixed inset-0 z-50 flex items-end justify-center"
@@ -173,7 +187,7 @@ export default function CalendarView({ renewals, onEdit }: CalendarViewProps) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
+              <h3 className="text-sm font-bold text-white">
                 {new Date(selectedDay + "T00:00:00").toLocaleDateString("default", { weekday: "long", month: "long", day: "numeric" })}
               </h3>
               <button onClick={() => setSelectedDay(null)} style={{ color: "var(--text-muted)" }}>
@@ -181,6 +195,12 @@ export default function CalendarView({ renewals, onEdit }: CalendarViewProps) {
               </button>
             </div>
             <div className="flex flex-col gap-2">
+              <button
+                onClick={() => { setSelectedDay(null); onSelectDate(selectedDay); }}
+                className="w-full py-2.5 mb-1 rounded-lg text-xs font-semibold text-white bg-[#5b5fd8] hover:bg-[#4a4ec4] transition-colors cursor-pointer"
+              >
+                + Add renewal on this date
+              </button>
               {selectedDayRenewals.map((renewal) => (
                 <button
                   key={renewal.id}
@@ -196,7 +216,7 @@ export default function CalendarView({ renewals, onEdit }: CalendarViewProps) {
                     )}
                     <span className="text-sm font-semibold text-white truncate">{renewal.name}</span>
                   </div>
-                  <span className="text-xs font-mono text-zinc-400">
+                  <span className="text-xs font-mono text-zinc-300">
                     {renewal.currency === "INR" ? "₹" : "$"}{renewal.amount}
                   </span>
                 </button>

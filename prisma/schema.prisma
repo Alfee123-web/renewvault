@@ -15,7 +15,7 @@ model User {
   password      String?
   accounts      Account[]
   sessions      Session[]
-  renewals      Renewal[] // <-- The new relation
+  renewals      Renewal[] 
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -73,7 +73,7 @@ model Renewal {
   dueDate            DateTime
   amount             Float
   currency           String   @default("USD")
-  billingCycle       String   @default("monthly") // <-- NEW FIELD FOR V2
+  billingCycle       String   @default("monthly") 
   status             String   @default("upcoming")
   reminderEnabled    Boolean  @default(false)
   reminderDaysBefore String?
@@ -90,4 +90,15 @@ model Renewal {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+}
+
+// --- NEW V2.1 MODELS ---
+
+model ExchangeRate {
+  id        String   @id @default(cuid())
+  currency  String   @unique // e.g., "INR", "EUR", "GBP"
+  rate      Float    // The conversion multiplier relative to USD
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
