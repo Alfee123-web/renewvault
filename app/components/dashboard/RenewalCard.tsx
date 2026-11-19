@@ -1,6 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Renewal } from "@/lib/types";
+import { normalizeCategory } from "@/lib/categories";
 
 interface RenewalCardProps {
   renewal: Renewal;
@@ -23,6 +25,13 @@ export default function RenewalCard({
   onDelete,
   onMarkRenewed,
 }: RenewalCardProps) {
+  const [logoFailed, setLogoFailed] = useState(false);
+
+  // Reset fallback if the user updates the website URL on an existing renewal
+  useEffect(() => {
+    setLogoFailed(false);
+  }, [renewal.websiteDomain]);
+
   const formattedDate = new Date(renewal.dueDate).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -35,8 +44,8 @@ export default function RenewalCard({
   });
 
   const formattedAmount = currencyFormatter.format(renewal.amount);
-
   const cycleLabel = renewal.billingCycle === "yearly" ? "/yr" : "/mo";
+  const displayCategory = normalizeCategory(renewal.category) || "Uncategorized";
 
   // --- COST SPLITTING ---
   const splitCount = renewal.splitCount && renewal.splitCount > 1 ? renewal.splitCount : 1;
@@ -54,7 +63,7 @@ export default function RenewalCard({
 
   return (
     <div className="flex flex-col justify-between rounded-2xl border border-zinc-800 bg-[#121214]/80 backdrop-blur-md p-4 sm:p-5 shadow-sm hover:border-zinc-700 hover:shadow-md transition-all relative overflow-hidden group">
-      
+
       <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#5b5fd8]/50 opacity-0 group-hover:opacity-100 transition-opacity" />
 
       {/* --- TOP SECTION --- */}
@@ -68,25 +77,31 @@ export default function RenewalCard({
               renewal.websiteDomain ? "cursor-pointer hover:border-[#5b5fd8]/60 transition-colors" : "cursor-default"
             }`}
           >
-            {renewal.websiteDomain ? (
-              <img 
-                src={`https://www.google.com/s2/favicons?domain=${renewal.websiteDomain}&sz=128`} 
-                alt={`${renewal.name} logo`} 
+            {renewal.websiteDomain && !logoFailed ? (
+              <img
+                src={`https://www.google.com/s2/favicons?domain=${renewal.websiteDomain}&sz=128`}
+                alt={`${renewal.name} logo`}
+                onLoad={(e) => {
+                  if (e.currentTarget.naturalWidth <= 16) {
+                    setLogoFailed(true);
+                  }
+                }}
+                onError={() => setLogoFailed(true)}
                 className="w-6 h-6 object-contain rounded-sm"
               />
             ) : (
-              <span className="text-sm font-bold text-[#5b5fd8]">
+              <span className="flex items-center justify-center w-full h-full bg-[#5b5fd8]/15 text-sm font-bold text-[#8b8df1]">
                 {renewal.name.charAt(0).toUpperCase()}
               </span>
             )}
           </button>
-          
+
           <div className="min-w-0">
             <h3 className="font-semibold text-white text-[15px] leading-tight truncate">
               {renewal.name}
             </h3>
             <p className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mt-0.5 truncate">
-              {renewal.category}
+              {displayCategory}
             </p>
           </div>
         </div>
@@ -182,7 +197,7 @@ export default function RenewalCard({
           </button>
         </div>
       </div>
-      
+
     </div>
   );
 }

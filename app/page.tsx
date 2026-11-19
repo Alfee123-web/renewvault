@@ -6,6 +6,7 @@ import { Button } from "@/app/components/ui/button";
 import InfiniteCoverflow from "@/app/components/InfiniteCoverflow";
 import StatsSection from "@/app/components/StatsSection";
 import FeatureGrid from "@/app/components/FeatureGrid";
+import RecentFeatures from "@/app/components/RecentFeatures";
 import StatusPill from "@/app/components/StatusPill";
 
 export default function Home() {
@@ -89,23 +90,29 @@ export default function Home() {
           </div>
 
           <h1 className="animate-fade-in-up delay-100 max-w-2xl text-4xl font-semibold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-            Track Renewals, Due Dates, and Reminders{" "}
+            Never get charged{" "}
             <span className="mt-2 block bg-gradient-to-r from-[var(--accent)] to-[var(--secondary)] bg-clip-text text-transparent">
-              In One Place.
+              by surprise again.
             </span>
           </h1>
 
           <p className="animate-fade-in-up delay-200 mx-auto mt-6 max-w-xl text-base leading-relaxed text-[var(--text-body)] sm:text-lg lg:mx-0">
-            A simple workspace to manage important dates and never miss a
-            renewal.
+            Scan a receipt, split the cost with friends, and get reminded before
+            every renewal, all in one calm, secure workspace.
           </p>
 
-          <div className="animate-fade-in-up delay-300 mt-8 flex flex-row items-center justify-center gap-4 lg:justify-start">
+          <div className="animate-fade-in-up delay-300 mt-8 flex flex-row flex-wrap items-center justify-center gap-4 lg:justify-start">
             <Link href={targetUrl}>
               <Button className="h-11 rounded-full bg-[var(--secondary)] px-8 text-base font-medium text-[var(--text-primary)] shadow-md shadow-black/30 transition-colors hover:bg-[var(--secondary-hover)] cursor-pointer">
                 Get started
               </Button>
             </Link>
+            <a
+              href="#whats-new"
+              className="inline-flex h-11 items-center rounded-full border border-[var(--border)] px-6 text-base font-medium text-[var(--text-body)] transition-colors hover:border-[var(--accent)]/60 hover:text-[var(--text-primary)]"
+            >
+              See what&rsquo;s new
+            </a>
           </div>
         </div>
 
@@ -151,14 +158,16 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Simulation Card 3 */}
+            {/* Simulation Card 3 (shows cost splitting) */}
             <div className="group rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3.5 hover:border-[var(--accent)]/60 transition-all flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold text-white">Spotify Premium</p>
-                <p className="text-[11px] text-[var(--text-muted)] mt-0.5">$9.99/mo • Due next week</p>
+                <p className="text-xs font-semibold text-white">Spotify Family</p>
+                <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
+                  $9.99/mo • <span className="text-[#8b8df1]">$3.33 your share</span> (split 3 ways)
+                </p>
               </div>
               <button
-                onClick={() => handleSimulate("Spotify", "$9.99")}
+                onClick={() => handleSimulate("Spotify Family", "$9.99")}
                 className="rounded-lg bg-[var(--accent)]/10 hover:bg-[var(--accent)] text-[var(--accent)] hover:text-white px-2.5 py-1 text-[11px] font-medium border border-[var(--accent)]/20 transition-all cursor-pointer"
               >
                 Simulate
@@ -176,6 +185,29 @@ export default function Home() {
 
       {/* Interactive Feature Grid with mouse-tracking */}
       <FeatureGrid />
+
+      {/* Recently added features */}
+      <RecentFeatures />
+
+      {/* Closing call to action */}
+      <section className="relative z-10 mx-auto w-full max-w-4xl px-6 pb-24 lg:px-8">
+        <div className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface-2)]/80 px-6 py-12 text-center shadow-2xl shadow-black/40 backdrop-blur-md sm:px-12">
+          <div className="pointer-events-none absolute -top-24 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-[var(--accent)]/20 blur-[90px]" />
+          <h2 className="relative text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
+            Track, split, and stay ahead of every renewal.
+          </h2>
+          <p className="relative mx-auto mt-4 max-w-xl text-base leading-relaxed text-[var(--text-body)]">
+            Pick from 40+ popular services or scan a receipt, and RenewVault takes care of the reminders.
+          </p>
+          <div className="relative mt-8 flex justify-center">
+            <Link href={targetUrl}>
+              <Button className="h-11 rounded-full bg-[var(--secondary)] px-8 text-base font-medium text-[var(--text-primary)] shadow-md shadow-black/30 transition-colors hover:bg-[var(--secondary-hover)] cursor-pointer">
+                Get started
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {/* Updated Footer with Status Pill */}
       <footer className="relative z-10 border-t border-[var(--border)] py-6 backdrop-blur-sm mt-auto">

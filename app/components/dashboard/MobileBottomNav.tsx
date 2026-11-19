@@ -8,10 +8,12 @@ interface NavItem {
   href: string;
 }
 
+// Same order as the desktop Sidebar so both stay in sync
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard" },
   { label: "Renewals", href: "/dashboard/renewals" },
   { label: "Reminders", href: "/dashboard/reminders" },
+  { label: "Rates", href: "/dashboard/rates" },
   { label: "Settings", href: "/dashboard/settings" },
 ];
 
@@ -37,6 +39,14 @@ function IconBell() {
     </svg>
   );
 }
+function IconRates() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+      <polyline points="16 7 22 7 22 13" />
+    </svg>
+  );
+}
 function IconSettings() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -45,31 +55,39 @@ function IconSettings() {
     </svg>
   );
 }
-const ICONS = [IconDashboard, IconRenewals, IconBell, IconSettings];
+const ICONS = [IconDashboard, IconRenewals, IconBell, IconRates, IconSettings];
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
 
   return (
     <nav
+      aria-label="Main navigation"
       className="lg:hidden fixed bottom-0 left-0 right-0 z-40 flex items-stretch justify-around border-t border-zinc-800/80 bg-[#121214]/95 backdrop-blur-xl"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       {NAV_ITEMS.map((item, i) => {
         const Icon = ICONS[i];
-        const isActive = pathname === item.href;
+        // Dashboard is exact-match only, otherwise it would stay lit on every sub-page
+        const isActive =
+          item.href === "/dashboard" ? pathname === item.href : pathname.startsWith(item.href);
 
         return (
           <Link
             key={item.label}
             href={item.href}
-            className="relative flex flex-1 flex-col items-center justify-center gap-1 py-2.5 transition-colors"
+            aria-current={isActive ? "page" : undefined}
+            className="relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-0.5 py-2.5 transition-colors"
           >
             {isActive && <span className="absolute top-0 h-0.5 w-8 rounded-full bg-[#5b5fd8]" />}
             <span className={isActive ? "text-[#8b8df1]" : "text-zinc-500"}>
               <Icon />
             </span>
-            <span className={`text-[10px] font-semibold tracking-wide ${isActive ? "text-white" : "text-zinc-500"}`}>
+            <span
+              className={`w-full truncate text-center text-[10px] font-semibold tracking-wide ${
+                isActive ? "text-white" : "text-zinc-500"
+              }`}
+            >
               {item.label}
             </span>
           </Link>

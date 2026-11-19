@@ -1,6 +1,11 @@
-import {prisma} from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
+import AtmosphericBackground from "@/app/components/dashboard/AtmBack";
+import RatesExplorer from "@/app/components/dashboard/RatesExplorer";
 
 export const revalidate = 3600; // Cache on edge for 1 hour
+
+// Rates older than this are flagged as possibly outdated
+const STALE_AFTER_HOURS = 48;
 
 export default async function ExchangeRatesPage() {
   const rates = await prisma.exchangeRate.findMany({
@@ -9,70 +14,67 @@ export default async function ExchangeRatesPage() {
     },
   });
 
-  const lastUpdated = rates.length > 0 ? rates[0].updatedAt : new Date();
+  // Newest update across ALL rows (the first row alone can be older than the rest)
+  const lastUpdated =
+    rates.length > 0
+      ? new Date(Math.max(...rates.map((r) => new Date(r.updatedAt).getTime())))
+      : null;
+
+  const ageHours = lastUpdated ? (Date.now() - lastUpdated.getTime()) / 36e5 : null;
+  const isStale = ageHours !== null && ageHours > STALE_AFTER_HOURS;
+
+  const updatedLabel = lastUpdated
+    ? lastUpdated.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+    : null;
+
+  // Only plain, serializable data goes to the client component
+  const rateItems = rates.map((r) => ({
+    id: r.id,
+    currency: r.currency,
+    rate: r.rate,
+  }));
 
   return (
     <div className="relative min-h-screen bg-transparent px-4 py-10 sm:px-6 lg:px-8">
-      {/* Complete Atmospheric Background */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[var(--bg)]">
-        <div className="absolute inset-0 animate-mesh-sweep opacity-40"></div>
-        <div className="absolute inset-0 animate-pan-grid opacity-15" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='36' height='36' viewBox='0 0 36 36' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M36 0L0 0L0 36' fill='none' stroke='%234338ca' stroke-opacity='0.2' stroke-width='1'/%3E%3C/svg%3E")` }}></div>
-        <div className="animate-float-a absolute top-[10vh] right-0 h-[500px] w-[500px] -translate-y-1/2 translate-x-1/4 rounded-full bg-[var(--accent)]/10 blur-[150px]" />
-        <div className="animate-float-b absolute top-[50vh] left-0 h-[420px] w-[420px] -translate-x-1/3 rounded-full bg-[var(--secondary)]/12 blur-[150px]" />
-        <div className="animate-float-c absolute top-[80vh] right-[10%] h-[300px] w-[300px] rounded-full bg-[var(--violet-glow)]/8 blur-[140px]" />
-        <div className="meteor-trail meteor-1" />
-        <div className="meteor-trail meteor-2" />
-        <div className="meteor-trail meteor-3" />
-      </div>
+      <AtmosphericBackground />
 
-      <div className="relative z-10 mx-auto max-w-6xl space-y-6 animate-fade-in-up">
+      <div className="relative z-10 mx-auto max-w-6xl animate-fade-in-up">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-white mb-1">
-              Live Exchange Rates
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="mb-1 text-2xl font-bold tracking-tight text-white sm:text-3xl">
+              Exchange Rates
             </h1>
-            <p className="text-sm text-gray-400">
-              Real-time currency rates relative to <span className="text-white font-medium">USD</span> used for multi-currency calculations.
+            <p className="text-sm text-zinc-400">
+              Currency rates relative to <span className="font-medium text-white">USD</span>, used for
+              multi-currency calculations.
             </p>
           </div>
-          <div className="inline-flex items-center gap-2 self-start rounded-full bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-400 ring-1 ring-inset ring-emerald-500/20">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Updated: {lastUpdated.toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-          </div>
+
+          {updatedLabel && (
+            <div
+              className={`inline-flex flex-shrink-0 items-center gap-2 self-start whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium ring-1 ring-inset ${
+                isStale
+                  ? "bg-amber-500/10 text-amber-400 ring-amber-500/20"
+                  : "bg-emerald-500/10 text-emerald-400 ring-emerald-500/20"
+              }`}
+            >
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${
+                  isStale ? "bg-amber-400" : "bg-emerald-400 animate-pulse"
+                }`}
+              />
+              {isStale ? `May be outdated · Updated ${updatedLabel}` : `Updated: ${updatedLabel}`}
+            </div>
+          )}
         </div>
 
-        {/* Grid Display */}
-        {rates.length === 0 ? (
-          <div className="rounded-2xl border border-zinc-800 bg-[#121214]/80 backdrop-blur-md p-8 text-center text-zinc-400 shadow-sm">
+        {rateItems.length === 0 ? (
+          <div className="rounded-2xl border border-zinc-800 bg-[#121214]/80 p-8 text-center text-zinc-400 shadow-sm backdrop-blur-md">
             No exchange rates found. Run the update cron route to seed values.
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {rates.map((rate) => (
-              <div
-                key={rate.id}
-                className="rounded-2xl border border-zinc-800 bg-[#121214]/80 backdrop-blur-md p-5 shadow-sm transition-colors hover:border-zinc-700 flex flex-col justify-between group"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-base font-bold text-white tracking-wide">
-                    {rate.currency}
-                  </span>
-                  <span className="text-[10px] font-medium text-zinc-500 uppercase">
-                    / USD
-                  </span>
-                </div>
-                <div className="mt-3">
-                  <p className="font-mono text-lg font-semibold text-zinc-200 group-hover:text-white transition-colors">
-                    {rate.rate.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 4,
-                    })}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <RatesExplorer rates={rateItems} />
         )}
       </div>
     </div>

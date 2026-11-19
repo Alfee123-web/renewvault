@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Renewal } from "@/lib/types";
+import { getUniqueCategories, isSameCategory } from "@/lib/categories";
 import RenewalCard from "@/app/components/dashboard/RenewalCard";
 import AddRenewalModal from "@/app/components/dashboard/AddRenewalModal";
 import SpendingSummary from "@/app/components/dashboard/SpendingSummary";
@@ -35,7 +36,7 @@ function PlusCircleIcon() { return <svg width="20" height="20" viewBox="0 0 24 2
 export default function Dashboard() {
   const [renewals, setRenewals] = useState<Renewal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
   const [sortBy, setSortBy] = useState("date-asc");
@@ -60,7 +61,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadData();
-    
+
     function handleClickOutside(e: MouseEvent) {
       if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
         setIsSortOpen(false);
@@ -73,16 +74,28 @@ export default function Dashboard() {
   const activeSortLabel = SORT_OPTIONS.find((opt) => opt.value === sortBy)?.label;
 
   const dynamicCategories = useMemo(() => {
-    const uniqueCats = new Set(renewals.map((r) => r.category).filter(Boolean));
-    return ["All", ...Array.from(uniqueCats)].sort();
+    return ["All", ...getUniqueCategories(renewals.map((r) => r.category))];
   }, [renewals]);
 
+  useEffect(() => {
+    if (
+      activeFilter !== "All" &&
+      !dynamicCategories.some((c) => isSameCategory(c, activeFilter))
+    ) {
+      setActiveFilter("All");
+    }
+  }, [dynamicCategories, activeFilter]);
+
   const filteredRenewals = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+
     const filtered = renewals.filter((renewal) => {
       const matchesSearch =
-        renewal.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        renewal.category.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesFilter = activeFilter === "All" || renewal.category === activeFilter;
+        !query ||
+        renewal.name.toLowerCase().includes(query) ||
+        (renewal.category ?? "").toLowerCase().includes(query);
+      const matchesFilter =
+        activeFilter === "All" || isSameCategory(renewal.category, activeFilter);
       return matchesSearch && matchesFilter;
     });
 
@@ -123,7 +136,7 @@ export default function Dashboard() {
       await deleteRenewal(id);
     } catch (error) {
       console.error("Failed to delete, reverting...", error);
-      loadData(); 
+      loadData();
     }
   };
 
@@ -164,7 +177,7 @@ export default function Dashboard() {
       </div>
 
       <div className="relative z-10 mx-auto max-w-6xl">
-        
+
         {/* Header */}
         <div className="relative z-[100] flex flex-col gap-4 mb-8 sm:flex-row sm:items-center sm:justify-between animate-fade-in-up">
           <div>
@@ -239,18 +252,18 @@ export default function Dashboard() {
           <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
             Showing {isLoading ? "..." : `${filteredRenewals.length} ${filteredRenewals.length === 1 ? 'renewal' : 'renewals'}`}
           </p>
-          
+
           <div className="flex items-center gap-3 self-start sm:self-auto">
             {/* View Mode Toggle */}
             <div className="flex items-center rounded-lg border border-zinc-800 bg-zinc-900/60 p-0.5">
-              <button 
+              <button
                 onClick={() => setViewMode("grid")}
                 className={`p-1.5 rounded-md transition-colors cursor-pointer ${viewMode === "grid" ? "bg-zinc-800 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-300"}`}
                 title="Grid view"
               >
                 <GridIcon />
               </button>
-              <button 
+              <button
                 onClick={() => setViewMode("calendar")}
                 className={`p-1.5 rounded-md transition-colors cursor-pointer ${viewMode === "calendar" ? "bg-zinc-800 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-300"}`}
                 title="Calendar view"
